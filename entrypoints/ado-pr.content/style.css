@@ -61,3 +61,111 @@
 .pep-review-btn--unauthenticated {
   background-color: #d13438;
 }
+
+/* === Review UI styles (Phase 2) === */
+
+.pep-review-btn--reviewing {
+  background-color: #605e5c;
+  cursor: wait;
+}
+
+.pep-review-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.pep-progress {
+  padding: 8px 12px;
+  background: #faf9f8;
+  border: 1px solid #edebe9;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #323130;
+}
+
+.pep-progress-status {
+  margin-bottom: 6px;
+  font-weight: 600;
+}
+
+.pep-progress-bar {
+  height: 4px;
+  background: #edebe9;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 4px;
+}
+
+.pep-progress-fill {
+  height: 100%;
+  background: #0078d4;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.pep-progress-file {
+  color: #605e5c;
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pep-file-results {
+  max-height: 150px;
+  overflow-y: auto;
+  margin-top: 6px;
+  border-top: 1px solid #edebe9;
+  padding-top: 6px;
+}
+
+.pep-file-result {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+  font-size: 11px;
+  color: #323130;
+}
+
+.pep-file-result-icon {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+}
+
+.pep-file-result-icon--success { color: #107c10; }
+.pep-file-result-icon--error { color: #d13438; }
+.pep-file-result-icon--skipped { color: #a19f9d; }
+
+.pep-file-result-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pep-file-result-count {
+  flex-shrink: 0;
+  color: #605e5c;
+}
+
+.pep-review-complete {
+  padding: 8px 12px;
+  background: #dff6dd;
+  border: 1px solid #107c10;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #107c10;
+}
+
+.pep-review-error {
+  padding: 8px 12px;
+  background: #fde7e9;
+  border: 1px solid #d13438;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #d13438;
+}
