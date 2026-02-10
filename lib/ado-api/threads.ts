@@ -72,7 +72,7 @@ export async function postInlineComment(
           commentType: 1, // text
         },
       ],
-      status: 1, // active
+      status: 6, // pending
       threadContext: {
         filePath: normalizedPath,
         rightFileStart: { line: finding.line, offset: 1 },
@@ -109,7 +109,7 @@ export async function postSummaryComment(
           commentType: 1, // text
         },
       ],
-      status: 1, // active
+      status: 6, // pending
     }),
   });
 

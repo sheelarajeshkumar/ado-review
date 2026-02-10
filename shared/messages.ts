@@ -18,7 +18,9 @@ export type Message =
   | { type: 'CHECK_AUTH'; payload: { orgUrl: string } }
   | { type: 'AUTH_RESULT'; payload: { authenticated: boolean; method: AuthMethod } }
   | { type: 'SAVE_PAT'; payload: { pat: string; orgUrl?: string } }
-  | { type: 'PAT_RESULT'; payload: { success: boolean; error?: string } };
+  | { type: 'PAT_RESULT'; payload: { success: boolean; error?: string } }
+  | { type: 'POST_REVIEW_COMMENTS'; payload: { prInfo: PrInfo; fileResults: FileReviewResult[]; iterationId: number; prTitle: string } }
+  | { type: 'POST_REVIEW_RESULT'; payload: { success: boolean; error?: string } };
 
 /** All valid message type strings. */
 export type MessageType = Message['type'];

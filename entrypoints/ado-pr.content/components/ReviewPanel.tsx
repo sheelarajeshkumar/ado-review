@@ -17,9 +17,11 @@ interface ReviewPanelProps {
   errorMessage: string | null;
   onExport: () => void;
   onCopy: () => void;
+  onPostToPr: () => void;
   onReviewAgain: () => void;
   onClose: () => void;
   copyLabel: string;
+  postLabel: string;
 }
 
 function truncatePath(path: string): string {
@@ -108,9 +110,11 @@ export default function ReviewPanel({
   errorMessage,
   onExport,
   onCopy,
+  onPostToPr,
   onReviewAgain,
   onClose,
   copyLabel,
+  postLabel,
 }: ReviewPanelProps) {
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
@@ -140,11 +144,9 @@ export default function ReviewPanel({
         {phase === 'reviewing' && progress && (
           <>
             <div className="pep-progress-status">
-              {progress.status === 'posting-comments'
-                ? `Posting comments\u2026`
-                : progress.fileIndex === 0
-                  ? 'Preparing review\u2026'
-                  : `Reviewing file ${progress.fileIndex} of ${progress.totalFiles}`}
+              {progress.fileIndex === 0
+                ? 'Preparing review\u2026'
+                : `Reviewing file ${progress.fileIndex} of ${progress.totalFiles}`}
             </div>
             <div className="pep-progress-bar">
               <div
@@ -208,7 +210,15 @@ export default function ReviewPanel({
       <div className="pep-panel-actions">
         {phase === 'complete' && (
           <>
-            <button className="pep-action-btn pep-action-btn--primary" onClick={onExport} type="button">
+            <button
+              className="pep-action-btn pep-action-btn--primary"
+              onClick={onPostToPr}
+              disabled={postLabel === 'Posted!' || postLabel === 'Posting\u2026'}
+              type="button"
+            >
+              {postLabel}
+            </button>
+            <button className="pep-action-btn" onClick={onExport} type="button">
               Export Markdown
             </button>
             <button className="pep-action-btn" onClick={onCopy} type="button">

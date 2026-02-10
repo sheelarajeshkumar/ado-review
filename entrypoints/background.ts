@@ -14,7 +14,9 @@
 import { checkAuth } from '@/lib/auth/manager';
 import { savePat } from '@/lib/auth/pat';
 import { runReview } from '@/lib/review/orchestrator';
-import type { AuthStatus } from '@/shared/types';
+import { postFileFindings, buildSummaryMarkdown } from '@/lib/review/comment-mapper';
+import { postSummaryComment } from '@/lib/ado-api/threads';
+import type { AuthStatus, PrInfo, FileReviewResult } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
 
 export default defineBackground(() => {
@@ -25,6 +27,7 @@ export default defineBackground(() => {
   > = {
     CHECK_AUTH: handleCheckAuth,
     SAVE_PAT: handleSavePat,
+    POST_REVIEW_COMMENTS: handlePostReviewComments,
   };
 
   browser.runtime.onMessage.addListener(
@@ -90,4 +93,36 @@ async function handleSavePat(
   payload: { pat: string; orgUrl?: string },
 ): Promise<{ success: boolean; error?: string }> {
   return savePat(payload.pat, payload.orgUrl);
+}
+
+/**
+ * Handle POST_REVIEW_COMMENTS message: post findings as pending comments on the PR.
+ */
+async function handlePostReviewComments(
+  payload: { prInfo: PrInfo; fileResults: FileReviewResult[]; iterationId: number; prTitle: string },
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { prInfo, fileResults, iterationId, prTitle } = payload;
+
+    // Post inline comments for each file with findings
+    for (const file of fileResults) {
+      if (file.status !== 'success' || !file.findings?.length) continue;
+      await postFileFindings(prInfo, file.filePath, file.findings, iterationId);
+    }
+
+    // Build and post summary comment
+    const results = fileResults.map((f) => ({
+      filePath: f.filePath,
+      status: f.status as 'success' | 'error' | 'skipped',
+      findings: f.findings ?? [],
+      fileSummary: '',
+      error: f.error,
+    }));
+    const summaryMarkdown = buildSummaryMarkdown(results, prTitle);
+    await postSummaryComment(prInfo, summaryMarkdown);
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
 }

@@ -42,7 +42,7 @@ export interface ReviewProgress {
   currentFile: string;
   fileIndex: number;
   totalFiles: number;
-  status: 'reviewing' | 'posting-comments';
+  status: 'reviewing';
 }
 
 /** Result of reviewing a single file. */
@@ -63,4 +63,6 @@ export interface ReviewSummary {
   totalFindings: number;
   findingsBySeverity: { Critical: number; Warning: number; Info: number };
   durationMs: number;
+  iterationId: number;
+  prTitle: string;
 }

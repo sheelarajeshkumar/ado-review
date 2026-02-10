@@ -8,6 +8,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { PrInfo, ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
+import { sendMessage } from '@/shared/messages';
 import ReviewButton from './components/ReviewButton';
 import ReviewPanel from './components/ReviewPanel';
 
@@ -166,6 +167,8 @@ interface AppProps {
 export default function App({ prInfo }: AppProps) {
   const { state, setState, startReview, reset } = useReviewPort(prInfo);
   const [copyLabel, setCopyLabel] = useState('Copy to Clipboard');
+  const [postLabel, setPostLabel] = useState('Post to PR');
+  const [posting, setPosting] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 
   // Button click: idle -> start review + open panel; otherwise toggle panel
@@ -207,8 +210,36 @@ export default function App({ prInfo }: AppProps) {
 
   const handleReviewAgain = () => {
     reset();
+    setPostLabel('Post to PR');
+    setPosting(false);
     // Small delay so state resets before starting
     setTimeout(() => startReview(), 0);
+  };
+
+  const handlePostToPr = async () => {
+    if (posting || !state.summary) return;
+    setPosting(true);
+    setPostLabel('Posting\u2026');
+    try {
+      const result = await sendMessage('POST_REVIEW_COMMENTS', {
+        prInfo,
+        fileResults: state.fileResults,
+        iterationId: state.summary.iterationId,
+        prTitle: state.summary.prTitle,
+      }) as { success: boolean; error?: string };
+
+      if (result.success) {
+        setPostLabel('Posted!');
+      } else {
+        setPostLabel('Post failed');
+        setTimeout(() => setPostLabel('Post to PR'), 3000);
+      }
+    } catch {
+      setPostLabel('Post failed');
+      setTimeout(() => setPostLabel('Post to PR'), 3000);
+    } finally {
+      setPosting(false);
+    }
   };
 
   // Click outside panel to close
@@ -246,9 +277,11 @@ export default function App({ prInfo }: AppProps) {
             errorMessage={state.errorMessage}
             onExport={handleExport}
             onCopy={handleCopy}
+            onPostToPr={handlePostToPr}
             onReviewAgain={handleReviewAgain}
             onClose={handleClose}
             copyLabel={copyLabel}
+            postLabel={postLabel}
           />
         </div>
       )}
