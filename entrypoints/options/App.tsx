@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { sendMessage } from '@/shared/messages';
-import { clearPat } from '@/shared/storage';
+import { clearPat, getOpenAiApiKey, setOpenAiApiKey } from '@/shared/storage';
 import type { AuthStatus } from '@/shared/types';
 
 /**
@@ -14,10 +14,35 @@ export default function App() {
   const [pat, setPat] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+  const [apiKeyFeedback, setApiKeyFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     checkAuthStatus();
+    loadApiKey();
   }, []);
+
+  async function loadApiKey() {
+    const key = await getOpenAiApiKey();
+    if (key) setApiKey(key);
+  }
+
+  async function handleSaveApiKey(e: React.FormEvent) {
+    e.preventDefault();
+    if (!apiKey.trim() || loading) return;
+
+    setLoading(true);
+    setApiKeyFeedback(null);
+
+    try {
+      await setOpenAiApiKey(apiKey.trim());
+      setApiKeyFeedback({ type: 'success', message: 'OpenAI API key saved.' });
+    } catch (err) {
+      setApiKeyFeedback({ type: 'error', message: `Error: ${String(err)}` });
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function checkAuthStatus() {
     try {
@@ -130,6 +155,41 @@ export default function App() {
         {feedback && (
           <div className={`feedback feedback-${feedback.type}`}>
             {feedback.message}
+          </div>
+        )}
+      </section>
+
+      <section className="auth-section">
+        <h2>LLM Configuration</h2>
+        <h3>OpenAI API Key</h3>
+        <p className="description">
+          Enter your OpenAI API key for AI-powered code reviews.
+        </p>
+
+        <form onSubmit={handleSaveApiKey} className="pat-form">
+          <div className="form-group">
+            <label htmlFor="apikey-input">API Key</label>
+            <input
+              id="apikey-input"
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              placeholder="sk-..."
+              disabled={loading}
+              autoComplete="off"
+            />
+          </div>
+
+          <div className="button-group">
+            <button type="submit" className="btn-primary" disabled={loading || !apiKey.trim()}>
+              {loading ? 'Saving...' : 'Save API Key'}
+            </button>
+          </div>
+        </form>
+
+        {apiKeyFeedback && (
+          <div className={`feedback feedback-${apiKeyFeedback.type}`}>
+            {apiKeyFeedback.message}
           </div>
         )}
       </section>

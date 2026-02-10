@@ -9,6 +9,7 @@
 export const STORAGE_KEYS = {
   PAT: 'pat',
   AUTH_METHOD: 'auth_method',
+  OPENAI_API_KEY: 'openai_api_key',
 } as const;
 
 /**
@@ -35,4 +36,23 @@ export async function setPat(pat: string): Promise<void> {
  */
 export async function clearPat(): Promise<void> {
   await browser.storage.local.remove(STORAGE_KEYS.PAT);
+}
+
+/**
+ * Retrieve the stored OpenAI API key.
+ *
+ * @returns The API key string, or null if not set
+ */
+export async function getOpenAiApiKey(): Promise<string | null> {
+  const result = await browser.storage.local.get(STORAGE_KEYS.OPENAI_API_KEY);
+  return (result[STORAGE_KEYS.OPENAI_API_KEY] as string) ?? null;
+}
+
+/**
+ * Store an OpenAI API key.
+ *
+ * @param key - The API key to store
+ */
+export async function setOpenAiApiKey(key: string): Promise<void> {
+  await browser.storage.local.set({ [STORAGE_KEYS.OPENAI_API_KEY]: key });
 }

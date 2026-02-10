@@ -28,3 +28,29 @@ export interface AuthStatus {
   /** Which authentication method is active */
   method: AuthMethod;
 }
+
+/** Progress update sent over the review port. */
+export interface ReviewProgress {
+  currentFile: string;
+  fileIndex: number;
+  totalFiles: number;
+  status: 'reviewing' | 'posting-comments';
+}
+
+/** Result of reviewing a single file. */
+export interface FileReviewResult {
+  filePath: string;
+  status: 'success' | 'error' | 'skipped';
+  findingCount?: number;
+  error?: string;
+}
+
+/** Final review summary sent when all files are done. */
+export interface ReviewSummary {
+  totalFiles: number;
+  reviewedFiles: number;
+  skippedFiles: number;
+  errorFiles: number;
+  totalFindings: number;
+  findingsBySeverity: { Critical: number; Warning: number; Info: number };
+}

@@ -9,6 +9,7 @@ export default defineConfig({
     host_permissions: [
       'https://dev.azure.com/*',
       'https://*.visualstudio.com/*',
+      'https://api.openai.com/*',
     ],
   },
 });

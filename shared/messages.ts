@@ -5,7 +5,13 @@
  * by the service worker's onMessage handler based on `type`.
  */
 
-import type { AuthMethod } from '@/shared/types';
+import type {
+  AuthMethod,
+  PrInfo,
+  ReviewProgress,
+  FileReviewResult,
+  ReviewSummary,
+} from '@/shared/types';
 
 /** Discriminated union of all extension messages. */
 export type Message =
@@ -39,3 +45,11 @@ export function sendMessage<T extends MessageType>(
 ): Promise<unknown> {
   return browser.runtime.sendMessage({ type, payload });
 }
+
+/** Messages sent over the review port (browser.runtime.connect). */
+export type PortMessage =
+  | { type: 'START_REVIEW'; payload: { prInfo: PrInfo } }
+  | { type: 'REVIEW_PROGRESS'; payload: ReviewProgress }
+  | { type: 'REVIEW_FILE_COMPLETE'; payload: FileReviewResult }
+  | { type: 'REVIEW_COMPLETE'; payload: ReviewSummary }
+  | { type: 'REVIEW_ERROR'; payload: { message: string } };
