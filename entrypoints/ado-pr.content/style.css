@@ -1,5 +1,5 @@
 /*
- * Scoped styles for the PEP Review button injected into Azure DevOps.
+ * Scoped styles for the PEP Review UI injected into Azure DevOps.
  *
  * These styles are automatically injected into the Shadow DOM by WXT
  * when cssInjectionMode is set to 'ui'. They do not leak into the
@@ -17,6 +17,15 @@
   font-size: 14px;
   line-height: 1;
 }
+
+/* === Container === */
+
+.pep-review-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* === Button === */
 
 .pep-review-btn {
   display: inline-flex;
@@ -50,44 +59,95 @@
   cursor: not-allowed;
 }
 
-.pep-review-btn--checking {
-  background-color: #605e5c;
-}
-
-.pep-review-btn--authenticated {
-  background-color: #107c10;
-}
-
-.pep-review-btn--unauthenticated {
-  background-color: #d13438;
-}
-
-/* === Review UI styles (Phase 2) === */
-
 .pep-review-btn--reviewing {
   background-color: #605e5c;
   cursor: wait;
 }
 
-.pep-review-container {
+/* === Panel (floating popover) === */
+
+.pep-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 420px;
+  max-height: 500px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
+  background: #ffffff;
+  border: 1px solid #e1dfdd;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  overflow: hidden;
 }
 
-.pep-progress {
-  padding: 8px 12px;
-  background: #faf9f8;
-  border: 1px solid #edebe9;
-  border-radius: 4px;
-  font-size: 12px;
+/* Arrow caret */
+.pep-panel::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  right: 16px;
+  width: 12px;
+  height: 12px;
+  background: #ffffff;
+  border-top: 1px solid #e1dfdd;
+  border-left: 1px solid #e1dfdd;
+  transform: rotate(45deg);
+}
+
+.pep-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #edebe9;
+  flex-shrink: 0;
+}
+
+.pep-panel-title {
+  font-size: 14px;
+  font-weight: 700;
   color: #323130;
 }
 
+.pep-panel-close {
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: #605e5c;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+
+.pep-panel-close:hover {
+  background: #f3f2f1;
+  color: #323130;
+}
+
+.pep-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.pep-panel-actions {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid #edebe9;
+  flex-shrink: 0;
+}
+
+/* === Progress (inline in panel) === */
+
 .pep-progress-status {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  font-size: 13px;
   font-weight: 600;
+  color: #323130;
 }
 
 .pep-progress-bar {
@@ -95,7 +155,7 @@
   background: #edebe9;
   border-radius: 2px;
   overflow: hidden;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .pep-progress-fill {
@@ -111,57 +171,203 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  margin-bottom: 8px;
 }
 
-.pep-file-results {
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 6px;
-  border-top: 1px solid #edebe9;
-  padding-top: 6px;
+/* === Summary stats === */
+
+.pep-summary-stats {
+  margin-bottom: 12px;
 }
 
-.pep-file-result {
+.pep-summary-line {
+  font-size: 13px;
+  color: #323130;
+  margin-bottom: 8px;
+}
+
+.pep-summary-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* === Severity badges === */
+
+.pep-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.pep-badge--critical {
+  background: #fde7e9;
+  color: #a80000;
+}
+
+.pep-badge--warning {
+  background: #fff4ce;
+  color: #835b00;
+}
+
+.pep-badge--info {
+  background: #e8f4fd;
+  color: #0067b8;
+}
+
+.pep-badge--clean {
+  background: #dff6dd;
+  color: #107c10;
+}
+
+/* === File sections (collapsible) === */
+
+.pep-panel-files {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pep-file-section {
+  border: 1px solid #edebe9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pep-file-section-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 2px 0;
-  font-size: 11px;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 10px;
+  background: #faf9f8;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
   color: #323130;
+  text-align: left;
 }
 
-.pep-file-result-icon {
+.pep-file-section-header:hover {
+  background: #f3f2f1;
+}
+
+.pep-file-section-icon {
   flex-shrink: 0;
   width: 14px;
   text-align: center;
+  font-size: 12px;
 }
 
-.pep-file-result-icon--success { color: #107c10; }
-.pep-file-result-icon--error { color: #d13438; }
-.pep-file-result-icon--skipped { color: #a19f9d; }
+.pep-file-section-icon--success { color: #107c10; }
+.pep-file-section-icon--error { color: #d13438; }
+.pep-file-section-icon--skipped { color: #a19f9d; }
 
-.pep-file-result-name {
+.pep-file-section-name {
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.pep-file-result-count {
+.pep-file-section-count {
   flex-shrink: 0;
+  color: #605e5c;
+  font-size: 11px;
+}
+
+.pep-file-section-chevron {
+  flex-shrink: 0;
+  font-size: 8px;
+  color: #605e5c;
+  transition: transform 0.15s ease;
+}
+
+.pep-file-section-chevron--open {
+  transform: rotate(90deg);
+}
+
+.pep-file-section-body {
+  border-top: 1px solid #edebe9;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* === Individual finding === */
+
+.pep-finding {
+  font-size: 12px;
+  color: #323130;
+}
+
+.pep-finding-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.pep-finding-line {
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 11px;
   color: #605e5c;
 }
 
-.pep-review-complete {
-  padding: 8px 12px;
-  background: #dff6dd;
-  border: 1px solid #107c10;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #107c10;
+.pep-finding-message {
+  line-height: 1.4;
 }
 
-.pep-review-error {
+.pep-finding-suggestion {
+  margin-top: 4px;
+  padding: 4px 8px;
+  background: #f3f2f1;
+  border-radius: 3px;
+  font-size: 11px;
+  color: #605e5c;
+  line-height: 1.4;
+}
+
+/* === Action buttons === */
+
+.pep-action-btn {
+  padding: 6px 12px;
+  border: 1px solid #8a8886;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #323130;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.pep-action-btn:hover {
+  background: #f3f2f1;
+}
+
+.pep-action-btn--primary {
+  background: #0078d4;
+  border-color: #0078d4;
+  color: #ffffff;
+}
+
+.pep-action-btn--primary:hover {
+  background: #006cbe;
+  border-color: #006cbe;
+}
+
+/* === Error in panel === */
+
+.pep-panel-error {
   padding: 8px 12px;
   background: #fde7e9;
   border: 1px solid #d13438;

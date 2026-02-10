@@ -29,6 +29,14 @@ export interface AuthStatus {
   method: AuthMethod;
 }
 
+/** A single code review finding (plain TS mirror of Zod schema — avoids pulling Zod into content script). */
+export interface Finding {
+  line: number;
+  severity: 'Critical' | 'Warning' | 'Info';
+  message: string;
+  suggestion: string | null;
+}
+
 /** Progress update sent over the review port. */
 export interface ReviewProgress {
   currentFile: string;
@@ -42,6 +50,7 @@ export interface FileReviewResult {
   filePath: string;
   status: 'success' | 'error' | 'skipped';
   findingCount?: number;
+  findings?: Finding[];
   error?: string;
 }
 
@@ -53,4 +62,5 @@ export interface ReviewSummary {
   errorFiles: number;
   totalFindings: number;
   findingsBySeverity: { Critical: number; Warning: number; Info: number };
+  durationMs: number;
 }

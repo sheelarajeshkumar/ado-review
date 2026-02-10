@@ -87,5 +87,13 @@ async function tryMount(ctx: InstanceType<typeof ContentScriptContext>): Promise
   });
 
   ui.mount();
+
+  // Allow the popover panel to overflow the shadow host container
+  const shadowHost = ui.shadowHost;
+  if (shadowHost) {
+    shadowHost.style.overflow = 'visible';
+    shadowHost.style.zIndex = '10000';
+  }
+
   currentUi = ui;
 }

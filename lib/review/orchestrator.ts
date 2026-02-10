@@ -44,6 +44,8 @@ export async function runReview(
   prInfo: PrInfo,
   onProgress: (msg: PortMessage) => void,
 ): Promise<void> {
+  const startTime = Date.now();
+
   // 1. Get API key
   const apiKey = await getOpenAiApiKey();
   if (!apiKey) {
@@ -154,11 +156,12 @@ export async function runReview(
         fileSummary: fileResult.summary,
       });
 
-      // Report file complete
+      // Report file complete (include findings for export in content script)
       const fileReviewResult: FileReviewResult = {
         filePath,
         status: 'success',
         findingCount: fileResult.findings.length,
+        findings: fileResult.findings,
       };
       onProgress({ type: 'REVIEW_FILE_COMPLETE', payload: fileReviewResult });
     } catch (error) {
@@ -203,6 +206,7 @@ export async function runReview(
       Warning: allFindings.filter((f) => f.severity === 'Warning').length,
       Info: allFindings.filter((f) => f.severity === 'Info').length,
     },
+    durationMs: Date.now() - startTime,
   };
 
   onProgress({ type: 'REVIEW_COMPLETE', payload: summary });
