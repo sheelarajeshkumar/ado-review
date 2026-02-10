@@ -10,28 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 1 of 4 (Extension Shell & Auth)
-Plan: 1 of 3 in current phase
+Plan: 3 of 3 in current phase
 Status: Executing
-Last activity: 2026-02-10 -- Completed 01-01-PLAN.md
+Last activity: 2026-02-10 -- Completed 01-03-PLAN.md
 
-Progress: [███░░░░░░░] 8%
+Progress: [██████░░░░] 25%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 7min
-- Total execution time: 0.12 hours
+- Total plans completed: 2
+- Average duration: 5min
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-extension-shell-auth | 1/3 | 7min | 7min |
+| 01-extension-shell-auth | 2/3 | 10min | 5min |
 
 **Recent Trend:**
-- Last 5 plans: 7min
-- Trend: baseline
+- Last 5 plans: 7min, 3min
+- Trend: improving
 
 *Updated after each plan completion*
 
@@ -47,6 +47,9 @@ Recent decisions affecting current work:
 - [Roadmap]: Auth (ADO-02, ADO-03) placed in Phase 1 because Phase 2 pipeline depends on working auth
 - [01-01]: Used WXT browser.* global instead of chrome.* -- WXT provides browser as the cross-browser API
 - [01-01]: waitForElement is a standalone utility (no ctx dependency) for reuse across contexts
+- [01-03]: Used browser.runtime.onMessage (WXT global) for message listener in background.ts
+- [01-03]: PAT validation is two-step: format check (84 chars, no whitespace) then live test against connectionData
+- [01-03]: Popup uses inline React styles instead of CSS file for simplicity at ~300px width
 
 ### Pending Todos
 
@@ -59,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-extension-shell-auth/01-01-SUMMARY.md
+Stopped at: Completed 01-03-PLAN.md
+Resume file: .planning/phases/01-extension-shell-auth/01-03-SUMMARY.md
