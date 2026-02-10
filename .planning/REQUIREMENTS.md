@@ -1,7 +1,7 @@
 # Requirements: PEP Review
 
 **Defined:** 2026-02-10
-**Core Value:** One-click AI code review that posts directly to Azure DevOps PRs — no copy-pasting, no context switching.
+**Core Value:** One-click AI code review that posts directly to Azure DevOps PRs -- no copy-pasting, no context switching.
 
 ## v1 Requirements
 
@@ -13,7 +13,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **CORE-02**: Review button is injected into the Azure DevOps PR page UI
 - [ ] **CORE-03**: Review button handles Azure DevOps SPA navigation (re-injects on route changes)
 - [ ] **CORE-04**: User can see review progress (which file is being reviewed, how many remaining)
-- [ ] **CORE-05**: Per-file errors are isolated — one file failing does not stop the entire review
+- [ ] **CORE-05**: Per-file errors are isolated -- one file failing does not stop the entire review
 - [ ] **CORE-06**: Failed file reviews are retried with exponential backoff
 
 ### Azure DevOps Integration
@@ -87,41 +87,41 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CORE-01 | — | Pending |
-| CORE-02 | — | Pending |
-| CORE-03 | — | Pending |
-| CORE-04 | — | Pending |
-| CORE-05 | — | Pending |
-| CORE-06 | — | Pending |
-| ADO-01 | — | Pending |
-| ADO-02 | — | Pending |
-| ADO-03 | — | Pending |
-| ADO-04 | — | Pending |
-| ADO-05 | — | Pending |
-| ADO-06 | — | Pending |
-| LLM-01 | — | Pending |
-| LLM-02 | — | Pending |
-| LLM-03 | — | Pending |
-| LLM-04 | — | Pending |
-| LLM-05 | — | Pending |
-| LLM-06 | — | Pending |
-| LLM-07 | — | Pending |
-| LLM-08 | — | Pending |
-| REV-01 | — | Pending |
-| REV-02 | — | Pending |
-| REV-03 | — | Pending |
-| REV-04 | — | Pending |
-| UX-01 | — | Pending |
-| UX-02 | — | Pending |
-| UX-03 | — | Pending |
-| UX-04 | — | Pending |
-| UX-05 | — | Pending |
+| CORE-01 | Phase 1 | Pending |
+| CORE-02 | Phase 1 | Pending |
+| CORE-03 | Phase 1 | Pending |
+| CORE-04 | Phase 2 | Pending |
+| CORE-05 | Phase 2 | Pending |
+| CORE-06 | Phase 2 | Pending |
+| ADO-01 | Phase 2 | Pending |
+| ADO-02 | Phase 1 | Pending |
+| ADO-03 | Phase 1 | Pending |
+| ADO-04 | Phase 2 | Pending |
+| ADO-05 | Phase 2 | Pending |
+| ADO-06 | Phase 2 | Pending |
+| LLM-01 | Phase 2 | Pending |
+| LLM-02 | Phase 3 | Pending |
+| LLM-03 | Phase 3 | Pending |
+| LLM-04 | Phase 3 | Pending |
+| LLM-05 | Phase 2 | Pending |
+| LLM-06 | Phase 2 | Pending |
+| LLM-07 | Phase 3 | Pending |
+| LLM-08 | Phase 2 | Pending |
+| REV-01 | Phase 4 | Pending |
+| REV-02 | Phase 4 | Pending |
+| REV-03 | Phase 4 | Pending |
+| REV-04 | Phase 2 | Pending |
+| UX-01 | Phase 3 | Pending |
+| UX-02 | Phase 3 | Pending |
+| UX-03 | Phase 4 | Pending |
+| UX-04 | Phase 4 | Pending |
+| UX-05 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 29 total
-- Mapped to phases: 0
-- Unmapped: 29 ⚠️
+- Mapped to phases: 29
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-02-10*
-*Last updated: 2026-02-10 after initial definition*
+*Last updated: 2026-02-10 after roadmap creation*
