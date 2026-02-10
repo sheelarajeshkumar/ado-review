@@ -6,6 +6,7 @@
  * Phase 2 will add actual review-triggering logic.
  */
 
+import { useState } from 'react';
 import type { PrInfo } from '@/shared/types';
 import type { AuthStatus } from '@/shared/types';
 import { sendMessage } from '@/shared/messages';
