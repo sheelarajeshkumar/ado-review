@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   PAT: 'pat',
   AUTH_METHOD: 'auth_method',
   OPENAI_API_KEY: 'openai_api_key',
+  ORG_URL: 'org_url',
 } as const;
 
 /**
@@ -55,4 +56,23 @@ export async function getOpenAiApiKey(): Promise<string | null> {
  */
 export async function setOpenAiApiKey(key: string): Promise<void> {
   await browser.storage.local.set({ [STORAGE_KEYS.OPENAI_API_KEY]: key });
+}
+
+/**
+ * Retrieve the stored Azure DevOps organization URL.
+ *
+ * @returns The org URL (e.g., "https://dev.azure.com/MyOrg"), or null if not set
+ */
+export async function getOrgUrl(): Promise<string | null> {
+  const result = await browser.storage.local.get(STORAGE_KEYS.ORG_URL);
+  return (result[STORAGE_KEYS.ORG_URL] as string) ?? null;
+}
+
+/**
+ * Store the Azure DevOps organization URL.
+ *
+ * @param url - The org URL to store
+ */
+export async function setOrgUrl(url: string): Promise<void> {
+  await browser.storage.local.set({ [STORAGE_KEYS.ORG_URL]: url });
 }

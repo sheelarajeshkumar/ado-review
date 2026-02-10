@@ -13,7 +13,7 @@ export const FindingSchema = z.object({
   line: z.number().describe('The line number in the file where the issue is'),
   severity: z.enum(['Critical', 'Warning', 'Info']).describe('Issue severity'),
   message: z.string().describe('Clear description of the issue found'),
-  suggestion: z.string().optional().describe('Suggested fix or improvement'),
+  suggestion: z.string().nullable().describe('Suggested fix or improvement'),
 });
 
 /** Schema for the complete review of a single file. */

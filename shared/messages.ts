@@ -17,7 +17,7 @@ import type {
 export type Message =
   | { type: 'CHECK_AUTH'; payload: { orgUrl: string } }
   | { type: 'AUTH_RESULT'; payload: { authenticated: boolean; method: AuthMethod } }
-  | { type: 'SAVE_PAT'; payload: { pat: string } }
+  | { type: 'SAVE_PAT'; payload: { pat: string; orgUrl?: string } }
   | { type: 'PAT_RESULT'; payload: { success: boolean; error?: string } };
 
 /** All valid message type strings. */

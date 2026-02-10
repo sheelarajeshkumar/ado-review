@@ -44,8 +44,12 @@ export async function testPat(
   pat: string,
   orgUrl?: string,
 ): Promise<{ valid: boolean; error?: string }> {
+  if (!orgUrl) {
+    return { valid: false, error: 'Organization URL is required to validate PAT. Set it in extension options.' };
+  }
+
   try {
-    const baseUrl = orgUrl || 'https://dev.azure.com';
+    const baseUrl = orgUrl.replace(/\/+$/, '');
     const response = await fetch(`${baseUrl}${CONNECTION_DATA_PATH}`, {
       method: 'GET',
       headers: {
@@ -98,7 +102,7 @@ export async function tryPatAuth(): Promise<{
  * 3. Stores via chrome.storage.local on success
  *
  * @param pat - The PAT to save
- * @param orgUrl - Optional org URL for testing (defaults to https://dev.azure.com)
+ * @param orgUrl - Org URL for testing (e.g., https://dev.azure.com/MyOrg)
  * @returns Success result or error
  */
 export async function savePat(
