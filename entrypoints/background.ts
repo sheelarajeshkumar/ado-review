@@ -13,7 +13,9 @@
 
 import { checkAuth } from '@/lib/auth/manager';
 import { savePat } from '@/lib/auth/pat';
+import { runReview } from '@/lib/review/orchestrator';
 import type { AuthStatus } from '@/shared/types';
+import type { PortMessage } from '@/shared/messages';
 
 export default defineBackground(() => {
   /** Message handler registry -- dispatches by message type. */
@@ -34,6 +36,40 @@ export default defineBackground(() => {
       }
     },
   );
+
+  // Handle long-lived port connections for review sessions
+  browser.runtime.onConnect.addListener((port) => {
+    if (port.name !== 'review') return;
+
+    port.onMessage.addListener(async (msg: PortMessage) => {
+      if (msg.type === 'START_REVIEW') {
+        try {
+          await runReview(msg.payload.prInfo, (progress) => {
+            try {
+              port.postMessage(progress);
+            } catch {
+              // Port may have disconnected -- ignore
+            }
+          });
+        } catch (error) {
+          try {
+            port.postMessage({
+              type: 'REVIEW_ERROR',
+              payload: {
+                message: error instanceof Error ? error.message : String(error),
+              },
+            });
+          } catch {
+            // Port disconnected
+          }
+        }
+      }
+    });
+
+    port.onDisconnect.addListener(() => {
+      console.log('[PEP Review] Review port disconnected');
+    });
+  });
 
   console.log('[PEP Review] Service worker started');
 });
