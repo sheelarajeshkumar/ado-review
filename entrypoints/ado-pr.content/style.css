@@ -1,0 +1,63 @@
+/*
+ * Scoped styles for the PEP Review button injected into Azure DevOps.
+ *
+ * These styles are automatically injected into the Shadow DOM by WXT
+ * when cssInjectionMode is set to 'ui'. They do not leak into the
+ * host page and are not affected by Azure DevOps styles.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:host {
+  font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  line-height: 1;
+}
+
+.pep-review-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #0078d4;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.pep-review-btn:hover {
+  background-color: #006cbe;
+}
+
+.pep-review-btn:active {
+  background-color: #005a9e;
+}
+
+.pep-review-btn:disabled {
+  background-color: #c8c6c4;
+  color: #a19f9d;
+  cursor: not-allowed;
+}
+
+.pep-review-btn--checking {
+  background-color: #605e5c;
+}
+
+.pep-review-btn--authenticated {
+  background-color: #107c10;
+}
+
+.pep-review-btn--unauthenticated {
+  background-color: #d13438;
+}
