@@ -45,12 +45,12 @@ Plans:
   3. A top-level summary comment appears on the PR with an overview across all reviewed files
   4. Non-code files (lockfiles, binaries, images) are automatically skipped without user intervention
   5. If one file fails to review, the remaining files still complete and the user sees which files had errors
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md — Foundation: install AI SDK, extend shared modules, ADO API client, review utilities (schemas, filter, retry, prompts)
+- [ ] 02-02-PLAN.md — Pipeline core: LLM reviewer, comment mapper, orchestrator, background port handler
+- [ ] 02-03-PLAN.md — UI integration: ReviewButton rewrite, ReviewProgress component, styles, end-to-end verification
 
 ### Phase 3: Multi-Provider & Settings
 **Goal**: User can choose between OpenAI, Anthropic, and Azure OpenAI as their LLM provider, configure API keys through an options page, and see estimated cost before running a review
@@ -90,6 +90,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Extension Shell & Auth | 3/3 | ✓ Complete | 2026-02-10 |
-| 2. PR Review Pipeline | 0/TBD | Not started | - |
+| 2. PR Review Pipeline | 0/3 | Planning complete | - |
 | 3. Multi-Provider & Settings | 0/TBD | Not started | - |
 | 4. Review Intelligence & History | 0/TBD | Not started | - |
