@@ -10,27 +10,28 @@ See: .planning/PROJECT.md (updated 2026-02-10)
 ## Current Position
 
 Phase: 2 of 4 (PR Review Pipeline)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-10 -- Phase 1 verified and complete
+Plan: 1 of 3 in current phase
+Status: Executing phase 2
+Last activity: 2026-02-10 -- Completed 02-01 pipeline foundation modules
 
-Progress: [███░░░░░░░] 25%
+Progress: [████░░░░░░] 33%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
+- Total plans completed: 4
 - Average duration: 5min
-- Total execution time: 0.25 hours
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-extension-shell-auth | 3/3 | 15min | 5min |
+| 02-pr-review-pipeline | 1/3 | 5min | 5min |
 
 **Recent Trend:**
-- Last 5 plans: 7min, 3min, 5min
+- Last 5 plans: 7min, 3min, 5min, 5min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -52,6 +53,10 @@ Recent decisions affecting current work:
 - [01-03]: Used browser.runtime.onMessage (WXT global) for message listener in background.ts
 - [01-03]: PAT validation is two-step: format check (84 chars, no whitespace) then live test against connectionData
 - [01-03]: Popup uses inline React styles instead of CSS file for simplicity at ~300px width
+- [02-01]: Created schemas.ts in Task 2 (alongside ADO client) because threads.ts imports Finding type
+- [02-01]: Used numeric changeType enum in IterationChange matching raw ADO API response with CHANGE_TYPE_MAP for conversion
+- [02-01]: Added 150ms minimum delay between comment POST requests to prevent ADO rate limiting
+- [02-01]: Line numbers prepended to file content in LLM prompts for accurate finding positions
 
 ### Pending Todos
 
@@ -64,5 +69,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-10
-Stopped at: Phase 1 complete, ready for Phase 2 planning
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
