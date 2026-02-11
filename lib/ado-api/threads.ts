@@ -58,6 +58,9 @@ export async function postInlineComment(
   if (finding.suggestion) {
     content += `\n\n**Suggestion:** ${finding.suggestion}`;
   }
+  if (finding.suggestedCode) {
+    content += `\n\n**Suggested code:**\n\`\`\`\n${finding.suggestedCode}\n\`\`\``;
+  }
   if (finding.why) {
     content += `\n\n**Why:** ${finding.why}`;
   }

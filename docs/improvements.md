@@ -55,19 +55,27 @@
 * **Integration:** Called in `orchestrator.ts` review loop — `redactSecrets(raw)` wraps every `getFileContent` result
 * **Zero config:** Runs automatically on every review with no user-facing settings required
 
----
-
-## Pending
-
 ### 5. Shadow DOM In-Line Overlays
 
 * **Description:** UI elements injected directly into the webpage (like GitHub's PR view) using a Shadow DOM to prevent your extension's styles from breaking the website's layout.
 * **What we can achieve:** This provides **seamless integration**. Reviewers can see AI suggestions exactly where the code sits, eliminating the need to jump back and forth between the code and a separate AI window.
 
-### 6. One-Click Refactor (DOM Bridge)
+#### Implementation Summary
+* **Marker injection:** After review completes, colored severity dots (Critical/Warning/Info) are injected next to lines with findings in the Azure DevOps diff view
+* **DOM probing:** Multiple selector strategies with fallbacks for file headers and line elements; graceful degradation when selectors don't match
+* **Shadow DOM popover:** Clicking a dot shows an isolated popover with finding details (severity badge, message, suggestion, why) — styles don't leak into host page
+* **MutationObserver:** Watches the diff container and re-applies markers when Azure DevOps re-renders lines (e.g. on scroll or expand)
+* **Cleanup:** `clearAnnotations()` removes all markers and the popover on discard, review-again, or unmount
 
-* **Description:** A bridge between the AI's suggestion and the browser's text input fields that allows a user to "Apply Fix" with a single click.
+### 6. One-Click Refactor (Copy Fix)
+
+* **Description:** "Copy Fix" buttons placed next to every suggestion — in both the review panel and inline popovers — that copy the suggestion text to clipboard with a single click.
 * **What we can achieve:** This significantly **increases developer velocity**. It transforms the tool from a "commenting assistant" into an "automated editor," removing the friction of manual copy-pasting during the review loop.
+
+#### Implementation Summary
+* **Panel button:** `CopyFixButton` React component inside each `.pep-finding-suggestion` block; shows "Copied!" for 2 seconds after click
+* **Popover button:** HTML "Copy Fix" button in the Shadow DOM popover with the same behavior
+* **Clipboard API:** Uses `navigator.clipboard.writeText()` with graceful error handling
 
 ---
 
@@ -79,5 +87,5 @@
 | **Context Engine** | Accuracy | Fewer irrelevant comments. | Done |
 | **Explainable Findings** | Education | Long-term team growth. | Done |
 | **PII Filter** | Security | Compliance and data safety. | Done |
-| **In-Line Overlays** | Workflow | Zero context-switching. | Pending |
-| **One-Click Refactor** | Speed | Instant PR updates. | Pending |
+| **In-Line Overlays** | Workflow | Zero context-switching. | Done |
+| **One-Click Refactor** | Speed | Instant PR updates. | Done |

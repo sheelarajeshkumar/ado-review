@@ -18,9 +18,8 @@ export interface ChangedRange {
 /**
  * Fetch the diff for a single file between the target and source commits.
  *
- * Uses the Items API with diff parameters to get a unified diff, then
- * parses the `@@ ... @@` hunk headers to extract changed line ranges
- * in the new (source) version of the file.
+ * Fetches both versions of the file and computes changed line ranges
+ * using an LCS-based comparison.
  *
  * @param prInfo - Parsed PR URL components
  * @param filePath - Path to the file within the repository
@@ -35,29 +34,8 @@ export async function getFileDiff(
   sourceCommitId: string,
 ): Promise<ChangedRange[] | null> {
   try {
-    const url =
-      `${prInfo.baseUrl}/_apis/git/repositories/${prInfo.repo}/diffs/commits` +
-      `?baseVersion=${baseCommitId}&baseVersionType=commit` +
-      `&targetVersion=${sourceCommitId}&targetVersionType=commit` +
-      `&diffCommonCommit=true`;
-
-    const response = await adoFetch(url);
-    const data = await response.json();
-
-    // Find the matching change entry for this file
-    const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-    const change = data.changes?.find(
-      (c: { item?: { path?: string } }) =>
-        c.item?.path === normalizedPath || c.item?.path === filePath,
-    );
-
-    if (!change) return null;
-
-    // If the API doesn't provide line-level info, fall back to fetching
-    // the raw diff text for this specific file
     return await getFileDiffFromText(prInfo, filePath, baseCommitId, sourceCommitId);
   } catch {
-    // Diff API failed — return null so caller falls back gracefully
     return null;
   }
 }
@@ -118,42 +96,159 @@ async function fetchFileText(
 }
 
 /**
- * Compare base and source line-by-line to find changed line ranges
- * in the source version. Uses a simple diff: any line that differs
- * from the base at the same position, or lines added/removed, are
- * marked as changed.
+ * Compare base and source to find changed line ranges in the source version.
+ *
+ * Uses an LCS (Longest Common Subsequence) approach:
+ * 1. Trim common prefix and suffix lines (O(n), handles typical edits)
+ * 2. Run LCS-DP on the remaining middle to identify matched lines
+ * 3. Source lines NOT matched by LCS are "changed" (inserted or modified)
+ *
+ * Falls back to greedy matching when the middle section is very large
+ * (n*m > 4M) to avoid excessive memory use.
  */
 function computeChangedRanges(base: string, source: string): ChangedRange[] {
   const baseLines = base.split('\n');
   const sourceLines = source.split('\n');
-  const ranges: ChangedRange[] = [];
 
+  // --- Trim common prefix ---
+  let prefix = 0;
+  while (
+    prefix < baseLines.length &&
+    prefix < sourceLines.length &&
+    baseLines[prefix] === sourceLines[prefix]
+  ) {
+    prefix++;
+  }
+
+  // --- Trim common suffix ---
+  let suffix = 0;
+  while (
+    suffix < baseLines.length - prefix &&
+    suffix < sourceLines.length - prefix &&
+    baseLines[baseLines.length - 1 - suffix] === sourceLines[sourceLines.length - 1 - suffix]
+  ) {
+    suffix++;
+  }
+
+  const baseMid = baseLines.slice(prefix, baseLines.length - suffix);
+  const srcMid = sourceLines.slice(prefix, sourceLines.length - suffix);
+
+  // If middle sections are empty, there are no changes (or only deletions)
+  if (srcMid.length === 0) {
+    return [];
+  }
+
+  // Find which source-middle lines are matched (unchanged) via LCS
+  const matched: Set<number> =
+    baseMid.length * srcMid.length > 4_000_000
+      ? greedyMatch(baseMid, srcMid)
+      : lcsMatchedSourceLines(baseMid, srcMid);
+
+  // Build ranges from unmatched source-middle lines (offset back to full-file indices)
+  const ranges: ChangedRange[] = [];
   let inChange = false;
   let changeStart = 0;
 
-  // Walk through source lines — a line is "changed" if the base line
-  // at the same position differs or doesn't exist
-  for (let i = 0; i < sourceLines.length; i++) {
-    const sourceLine = sourceLines[i];
-    const baseLine = i < baseLines.length ? baseLines[i] : undefined;
-    const isChanged = baseLine !== sourceLine;
+  for (let i = 0; i < srcMid.length; i++) {
+    const isChanged = !matched.has(i);
+    const lineNum = prefix + i + 1; // 1-based in full file
 
     if (isChanged && !inChange) {
       inChange = true;
-      changeStart = i + 1; // 1-based
+      changeStart = lineNum;
     } else if (!isChanged && inChange) {
       inChange = false;
-      ranges.push({ startLine: changeStart, endLine: i }); // i is 0-based, endLine is the last changed line (1-based)
+      ranges.push({ startLine: changeStart, endLine: lineNum - 1 });
     }
   }
 
-  // Close trailing change
   if (inChange) {
-    ranges.push({ startLine: changeStart, endLine: sourceLines.length });
+    ranges.push({ startLine: changeStart, endLine: prefix + srcMid.length });
   }
 
-  // If source is shorter than base, mark that the file had deletions at the end
-  // (no new lines to mark, but the diff is noted)
-
   return ranges;
+}
+
+/**
+ * Standard LCS via dynamic programming. Returns the set of source-middle
+ * line indices that are part of the longest common subsequence (i.e. unchanged).
+ */
+function lcsMatchedSourceLines(base: string[], source: string[]): Set<number> {
+  const n = base.length;
+  const m = source.length;
+
+  // Build DP table
+  const dp: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
+
+  for (let i = 1; i <= n; i++) {
+    for (let j = 1; j <= m; j++) {
+      if (base[i - 1] === source[j - 1]) {
+        dp[i][j] = dp[i - 1][j - 1] + 1;
+      } else {
+        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+  }
+
+  // Back-trace to find matched source indices
+  const matched = new Set<number>();
+  let i = n;
+  let j = m;
+  while (i > 0 && j > 0) {
+    if (base[i - 1] === source[j - 1]) {
+      matched.add(j - 1);
+      i--;
+      j--;
+    } else if (dp[i - 1][j] >= dp[i][j - 1]) {
+      i--;
+    } else {
+      j--;
+    }
+  }
+
+  return matched;
+}
+
+/**
+ * Greedy fallback for very large diffs. Scans source lines and matches
+ * each to the earliest available base line with the same content.
+ * Less accurate than LCS but O(n+m) and bounded memory.
+ */
+function greedyMatch(base: string[], source: string[]): Set<number> {
+  // Build a map from line content → list of base indices (in order)
+  const baseMap = new Map<string, number[]>();
+  for (let i = 0; i < base.length; i++) {
+    const line = base[i];
+    let list = baseMap.get(line);
+    if (!list) {
+      list = [];
+      baseMap.set(line, list);
+    }
+    list.push(i);
+  }
+
+  const matched = new Set<number>();
+  // Track next usable position per base-content bucket via cursor indices
+  const cursors = new Map<string, number>();
+  let minBaseIdx = -1; // matched base lines must be strictly increasing
+
+  for (let j = 0; j < source.length; j++) {
+    const line = source[j];
+    const list = baseMap.get(line);
+    if (!list) continue;
+
+    const cursor = cursors.get(line) ?? 0;
+    // Find next base index > minBaseIdx
+    let k = cursor;
+    while (k < list.length && list[k] <= minBaseIdx) {
+      k++;
+    }
+    if (k < list.length) {
+      matched.add(j);
+      minBaseIdx = list[k];
+      cursors.set(line, k + 1);
+    }
+  }
+
+  return matched;
 }

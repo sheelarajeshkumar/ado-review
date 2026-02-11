@@ -27,7 +27,39 @@ export const SELECTORS = {
     '.bolt-header-title',
     'h1[role="heading"]',
   ],
+
+  /** File header rows in the diff/changes view */
+  DIFF_FILE_HEADERS: [
+    '.repos-summary-header',
+    '.change-summary-item',
+    '.repos-changes-header',
+  ],
+
+  /** Container holding the actual diff content (code lines) */
+  DIFF_CONTENT_CONTAINER: [
+    '.repos-diff-contents',
+    '.code-diff-container',
+    '[role="grid"]',
+  ],
 } as const;
+
+/**
+ * Try multiple selectors in order, return all matches from first selector that hits.
+ *
+ * @param selectors - Array of CSS selectors to try in priority order
+ * @param root - Root element to search within (defaults to document)
+ * @returns Array of matching elements from the first successful selector, or empty array
+ */
+export function querySelectorAllFallback(
+  selectors: readonly string[],
+  root: ParentNode = document,
+): Element[] {
+  for (const selector of selectors) {
+    const els = root.querySelectorAll(selector);
+    if (els.length > 0) return Array.from(els);
+  }
+  return [];
+}
 
 /**
  * Try multiple selectors in order, return first match.

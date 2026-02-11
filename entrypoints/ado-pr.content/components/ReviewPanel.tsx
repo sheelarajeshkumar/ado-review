@@ -8,8 +8,32 @@
  * Supports stop (keeps partial results) and discard (reset to idle).
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
+
+function CopyFixButton({ text }: { text: string }) {
+  const [label, setLabel] = useState('Copy Fix');
+  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  const handleClick = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setLabel('Copied!');
+    } catch {
+      setLabel('Failed');
+    }
+    clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setLabel('Copy Fix'), 2000);
+  };
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  return (
+    <button className="pep-copy-fix-btn" onClick={handleClick} type="button">
+      {label}
+    </button>
+  );
+}
 
 interface ReviewPanelProps {
   phase: 'reviewing' | 'complete' | 'error';
@@ -100,6 +124,12 @@ function FileSection({ result }: { result: FileReviewResult }) {
               <div className="pep-finding-message">{f.message}</div>
               {f.suggestion && (
                 <div className="pep-finding-suggestion">{f.suggestion}</div>
+              )}
+              {f.suggestedCode && (
+                <div className="pep-finding-code-suggestion">
+                  <pre className="pep-finding-code-block"><code>{f.suggestedCode}</code></pre>
+                  <CopyFixButton text={f.suggestedCode} />
+                </div>
               )}
               {f.why && (
                 <div className="pep-finding-why">

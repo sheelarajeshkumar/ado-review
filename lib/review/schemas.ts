@@ -14,6 +14,9 @@ export const FindingSchema = z.object({
   severity: z.enum(['Critical', 'Warning', 'Info']).describe('Issue severity'),
   message: z.string().describe('Clear description of the issue found'),
   suggestion: z.string().nullable().describe('Suggested fix or improvement'),
+  suggestedCode: z.string().nullable().describe(
+    'Replacement code block for the flagged lines. Include only the corrected code, not the surrounding context. Null if no concrete code fix applies.'
+  ),
   why: z.string().describe('Brief explanation of why this matters — reference best practices, security principles, or performance implications'),
 });
 

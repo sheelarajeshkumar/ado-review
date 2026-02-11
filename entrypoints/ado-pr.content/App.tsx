@@ -11,6 +11,7 @@ import type { PortMessage } from '@/shared/messages';
 import { sendMessage } from '@/shared/messages';
 import ReviewButton from './components/ReviewButton';
 import ReviewPanel from './components/ReviewPanel';
+import { applyAnnotations, clearAnnotations } from './inline-annotations';
 
 type Phase = 'idle' | 'reviewing' | 'complete' | 'error';
 
@@ -230,6 +231,17 @@ export default function App({ prInfo }: AppProps) {
     [panelPos.top, panelPos.right],
   );
 
+  // Apply inline annotations when review completes
+  useEffect(() => {
+    if (state.phase === 'complete' && state.fileResults.length > 0) {
+      const timer = setTimeout(() => applyAnnotations(state.fileResults), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [state.phase, state.fileResults]);
+
+  // Cleanup annotations on unmount
+  useEffect(() => () => clearAnnotations(), []);
+
   const handleButtonClick = () => {
     if (state.phase === 'idle') {
       startReview();
@@ -266,6 +278,7 @@ export default function App({ prInfo }: AppProps) {
   };
 
   const handleReviewAgain = () => {
+    clearAnnotations();
     reset();
     setPostLabel('Post to PR');
     setPosting(false);
@@ -273,6 +286,7 @@ export default function App({ prInfo }: AppProps) {
   };
 
   const handleDiscard = () => {
+    clearAnnotations();
     reset();
     setPostLabel('Post to PR');
     setPosting(false);

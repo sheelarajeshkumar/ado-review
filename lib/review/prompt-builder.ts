@@ -27,6 +27,7 @@ For each issue you find, provide:
 - A severity level: "Critical" (bugs, security issues), "Warning" (code smells, potential issues), or "Info" (style, suggestions)
 - A clear, concise description of the issue
 - An optional suggestion for how to fix it
+- If applicable, a code block containing the corrected replacement code for the flagged line(s). Include ONLY the fixed lines (not surrounding context). Set to null when no concrete code change applies (e.g., for architectural or design suggestions).
 - A brief explanation of why this matters — reference best practices, security principles, or performance implications
 
 Focus on:

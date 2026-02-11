@@ -392,6 +392,53 @@
   line-height: 1.5;
 }
 
+.pep-finding-code-suggestion {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.pep-finding-code-block {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  padding: 6px 10px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  border-radius: 4px;
+  font-family: "Cascadia Code", "Fira Code", monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.pep-finding-code-block code {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+.pep-copy-fix-btn {
+  flex-shrink: 0;
+  padding: 2px 8px;
+  border: 1px solid #8a8886;
+  border-radius: 3px;
+  background: #fff;
+  color: #605e5c;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+
+.pep-copy-fix-btn:hover {
+  background: #f3f2f1;
+  color: #323130;
+}
+
 .pep-finding-why {
   font-size: 11px;
   color: #605e5c;

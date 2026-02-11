@@ -48,6 +48,7 @@ export interface Finding {
   severity: 'Critical' | 'Warning' | 'Info';
   message: string;
   suggestion: string | null;
+  suggestedCode: string | null;
   why: string;
 }
 
