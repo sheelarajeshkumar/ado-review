@@ -4,6 +4,17 @@
  * Used across content scripts, service worker, and extension pages.
  */
 
+/** Supported AI provider identifiers. */
+export type AiProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
+
+/** Configuration for the selected AI provider. */
+export interface AiProviderConfig {
+  provider: AiProvider;
+  model: string;
+  apiKey: string;
+  baseUrl?: string;
+}
+
 /** Parsed Azure DevOps pull request URL components. */
 export interface PrInfo {
   /** Azure DevOps organization name */

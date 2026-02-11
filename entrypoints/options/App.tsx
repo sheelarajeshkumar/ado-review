@@ -1,7 +1,28 @@
 import { useState, useEffect } from 'react';
 import { sendMessage } from '@/shared/messages';
-import { clearPat, getOpenAiApiKey, setOpenAiApiKey, getOrgUrl, setOrgUrl } from '@/shared/storage';
-import type { AuthStatus } from '@/shared/types';
+import { clearPat, getAiProviderConfig, setAiProviderConfig, getOrgUrl, setOrgUrl } from '@/shared/storage';
+import type { AuthStatus, AiProvider, AiProviderConfig } from '@/shared/types';
+
+const DEFAULT_MODELS: Record<AiProvider, string> = {
+  openai: 'gpt-4o',
+  anthropic: 'claude-sonnet-4-20250514',
+  google: 'gemini-2.0-flash',
+  ollama: 'llama3',
+};
+
+const MODEL_PLACEHOLDERS: Record<AiProvider, string> = {
+  openai: 'gpt-4o',
+  anthropic: 'claude-sonnet-4-20250514',
+  google: 'gemini-2.0-flash',
+  ollama: 'llama3',
+};
+
+const PROVIDER_LABELS: Record<AiProvider, string> = {
+  openai: 'OpenAI',
+  anthropic: 'Anthropic Claude',
+  google: 'Google Gemini',
+  ollama: 'Ollama (Local)',
+};
 
 /**
  * Options page for PEP Review extension.
@@ -14,13 +35,18 @@ export default function App() {
   const [pat, setPat] = useState('');
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeyFeedback, setApiKeyFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [orgUrl, setOrgUrlState] = useState('');
+
+  // AI provider config state
+  const [provider, setProvider] = useState<AiProvider>('openai');
+  const [model, setModel] = useState('gpt-4o');
+  const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [providerFeedback, setProviderFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
     loadOrgUrl();
-    loadApiKey();
+    loadProviderConfig();
   }, []);
 
   async function loadOrgUrl() {
@@ -31,23 +57,45 @@ export default function App() {
     }
   }
 
-  async function loadApiKey() {
-    const key = await getOpenAiApiKey();
-    if (key) setApiKey(key);
+  async function loadProviderConfig() {
+    const config = await getAiProviderConfig();
+    if (config) {
+      setProvider(config.provider);
+      setModel(config.model);
+      setApiKey(config.apiKey);
+      setBaseUrl(config.baseUrl || '');
+    }
   }
 
-  async function handleSaveApiKey(e: React.FormEvent) {
+  function handleProviderChange(newProvider: AiProvider) {
+    setProvider(newProvider);
+    setModel(DEFAULT_MODELS[newProvider]);
+    setApiKey('');
+    setBaseUrl(newProvider === 'ollama' ? 'http://localhost:11434/v1' : '');
+    setProviderFeedback(null);
+  }
+
+  async function handleSaveConfig(e: React.FormEvent) {
     e.preventDefault();
-    if (!apiKey.trim() || loading) return;
+    if (loading) return;
+
+    // Validate: API key required for non-Ollama providers
+    if (provider !== 'ollama' && !apiKey.trim()) return;
 
     setLoading(true);
-    setApiKeyFeedback(null);
+    setProviderFeedback(null);
 
     try {
-      await setOpenAiApiKey(apiKey.trim());
-      setApiKeyFeedback({ type: 'success', message: 'OpenAI API key saved.' });
+      const config: AiProviderConfig = {
+        provider,
+        model: model.trim() || DEFAULT_MODELS[provider],
+        apiKey: apiKey.trim(),
+        ...(baseUrl.trim() ? { baseUrl: baseUrl.trim() } : {}),
+      };
+      await setAiProviderConfig(config);
+      setProviderFeedback({ type: 'success', message: `${PROVIDER_LABELS[provider]} configuration saved.` });
     } catch (err) {
-      setApiKeyFeedback({ type: 'error', message: `Error: ${String(err)}` });
+      setProviderFeedback({ type: 'error', message: `Error: ${String(err)}` });
     } finally {
       setLoading(false);
     }
@@ -145,6 +193,8 @@ export default function App() {
   }
 
   const status = getStatusDisplay();
+  const showApiKey = provider !== 'ollama';
+  const showBaseUrl = provider === 'ollama' || provider === 'openai';
 
   return (
     <div className="container">
@@ -222,36 +272,86 @@ export default function App() {
       </section>
 
       <section className="auth-section">
-        <h2>LLM Configuration</h2>
-        <h3>OpenAI API Key</h3>
+        <h2>AI Provider</h2>
         <p className="description">
-          Enter your OpenAI API key for AI-powered code reviews.
+          Choose your AI provider and model for code reviews.
         </p>
 
-        <form onSubmit={handleSaveApiKey} className="pat-form">
+        <form onSubmit={handleSaveConfig} className="pat-form">
           <div className="form-group">
-            <label htmlFor="apikey-input">API Key</label>
+            <label htmlFor="provider-select">Provider</label>
+            <select
+              id="provider-select"
+              value={provider}
+              onChange={(e) => handleProviderChange(e.target.value as AiProvider)}
+              disabled={loading}
+            >
+              <option value="openai">{PROVIDER_LABELS.openai}</option>
+              <option value="anthropic">{PROVIDER_LABELS.anthropic}</option>
+              <option value="google">{PROVIDER_LABELS.google}</option>
+              <option value="ollama">{PROVIDER_LABELS.ollama}</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="model-input">Model</label>
             <input
-              id="apikey-input"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="sk-..."
+              id="model-input"
+              type="text"
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              placeholder={MODEL_PLACEHOLDERS[provider]}
               disabled={loading}
               autoComplete="off"
             />
           </div>
 
+          {showApiKey && (
+            <div className="form-group">
+              <label htmlFor="apikey-input">API Key</label>
+              <input
+                id="apikey-input"
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                placeholder={provider === 'openai' ? 'sk-...' : 'Enter API key'}
+                disabled={loading}
+                autoComplete="off"
+              />
+            </div>
+          )}
+
+          {showBaseUrl && (
+            <div className="form-group">
+              <label htmlFor="baseurl-input">
+                Base URL {provider === 'openai' ? '(optional, for Azure OpenAI)' : ''}
+              </label>
+              <input
+                id="baseurl-input"
+                type="text"
+                value={baseUrl}
+                onChange={(e) => setBaseUrl(e.target.value)}
+                placeholder={provider === 'ollama' ? 'http://localhost:11434/v1' : 'https://your-resource.openai.azure.com/...'}
+                disabled={loading}
+                autoComplete="off"
+              />
+            </div>
+          )}
+
           <div className="button-group">
-            <button type="submit" className="btn-primary" disabled={loading || !apiKey.trim()}>
-              {loading ? 'Saving...' : 'Save API Key'}
+            <button
+              type="submit"
+              className="btn-primary"
+              disabled={loading || (showApiKey && !apiKey.trim())}
+            >
+              {loading ? 'Saving...' : 'Save Configuration'}
             </button>
           </div>
         </form>
 
-        {apiKeyFeedback && (
-          <div className={`feedback feedback-${apiKeyFeedback.type}`}>
-            {apiKeyFeedback.message}
+        {providerFeedback && (
+          <div className={`feedback feedback-${providerFeedback.type}`}>
+            {providerFeedback.message}
           </div>
         )}
       </section>

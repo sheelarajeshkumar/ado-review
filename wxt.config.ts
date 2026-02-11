@@ -10,6 +10,9 @@ export default defineConfig({
       'https://dev.azure.com/*',
       'https://*.visualstudio.com/*',
       'https://api.openai.com/*',
+      'https://api.anthropic.com/*',
+      'https://generativelanguage.googleapis.com/*',
+      'http://localhost/*',
     ],
   },
 });

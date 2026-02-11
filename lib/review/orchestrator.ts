@@ -12,7 +12,7 @@
 
 import type { PrInfo, ReviewProgress, ReviewSummary, FileReviewResult } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
-import { getOpenAiApiKey } from '@/shared/storage';
+import { getAiProviderConfig } from '@/shared/storage';
 import { getPrDetails, getLatestIterationId, getChangedFiles } from '@/lib/ado-api/pull-requests';
 import { getFileContent } from '@/lib/ado-api/file-content';
 import { CHANGE_TYPE_MAP } from '@/lib/ado-api/types';
@@ -45,12 +45,12 @@ export async function runReview(
 ): Promise<void> {
   const startTime = Date.now();
 
-  // 1. Get API key
-  const apiKey = await getOpenAiApiKey();
-  if (!apiKey) {
+  // 1. Get AI provider config
+  const providerConfig = await getAiProviderConfig();
+  if (!providerConfig) {
     onProgress({
       type: 'REVIEW_ERROR',
-      payload: { message: 'OpenAI API key not configured. Set it in extension options.' },
+      payload: { message: 'AI provider not configured. Set it in extension options.' },
     });
     return;
   }
@@ -125,7 +125,7 @@ export async function runReview(
       const fileResult = await retryWithBackoff(
         async () => {
           const content = await getFileContent(prInfo, filePath, prDetails.sourceCommitId);
-          return reviewSingleFile(filePath, content, changeType, apiKey);
+          return reviewSingleFile(filePath, content, changeType, providerConfig);
         },
         { maxRetries: 2, baseDelayMs: 1000 },
       );

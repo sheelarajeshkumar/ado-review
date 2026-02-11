@@ -5,11 +5,14 @@
  * to ensure consistent key names and type safety.
  */
 
+import type { AiProviderConfig } from './types';
+
 /** Storage key constants. */
 export const STORAGE_KEYS = {
   PAT: 'pat',
   AUTH_METHOD: 'auth_method',
   OPENAI_API_KEY: 'openai_api_key',
+  AI_PROVIDER_CONFIG: 'ai_provider_config',
   ORG_URL: 'org_url',
 } as const;
 
@@ -56,6 +59,37 @@ export async function getOpenAiApiKey(): Promise<string | null> {
  */
 export async function setOpenAiApiKey(key: string): Promise<void> {
   await browser.storage.local.set({ [STORAGE_KEYS.OPENAI_API_KEY]: key });
+}
+
+/**
+ * Retrieve the AI provider configuration.
+ *
+ * Falls back to the legacy OPENAI_API_KEY for backward compatibility
+ * with existing installs that only had an OpenAI key configured.
+ *
+ * @returns The provider config, or null if nothing is configured
+ */
+export async function getAiProviderConfig(): Promise<AiProviderConfig | null> {
+  const result = await browser.storage.local.get(STORAGE_KEYS.AI_PROVIDER_CONFIG);
+  const stored = result[STORAGE_KEYS.AI_PROVIDER_CONFIG] as AiProviderConfig | undefined;
+  if (stored) return stored;
+
+  // Backward compat: migrate legacy OpenAI-only key
+  const legacyKey = await getOpenAiApiKey();
+  if (legacyKey) {
+    return { provider: 'openai', model: 'gpt-4o', apiKey: legacyKey };
+  }
+
+  return null;
+}
+
+/**
+ * Store the AI provider configuration.
+ *
+ * @param config - The provider config to store
+ */
+export async function setAiProviderConfig(config: AiProviderConfig): Promise<void> {
+  await browser.storage.local.set({ [STORAGE_KEYS.AI_PROVIDER_CONFIG]: config });
 }
 
 /**
