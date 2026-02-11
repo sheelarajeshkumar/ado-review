@@ -21,6 +21,7 @@ interface ReviewState {
   fileResults: FileReviewResult[];
   summary: ReviewSummary | null;
   errorMessage: string | null;
+  isPartial: boolean;
 }
 
 const INITIAL_STATE: ReviewState = {
@@ -30,6 +31,7 @@ const INITIAL_STATE: ReviewState = {
   fileResults: [],
   summary: null,
   errorMessage: null,
+  isPartial: false,
 };
 
 // --- Port hook ---
@@ -50,7 +52,6 @@ function useReviewPort(prInfo: PrInfo) {
   }, []);
 
   const startReview = useCallback(() => {
-    // Disconnect any lingering port
     if (portRef.current) {
       portRef.current.disconnect();
       portRef.current = null;
@@ -63,6 +64,7 @@ function useReviewPort(prInfo: PrInfo) {
       fileResults: [],
       summary: null,
       errorMessage: null,
+      isPartial: false,
     });
 
     activeRef.current = true;
@@ -88,6 +90,7 @@ function useReviewPort(prInfo: PrInfo) {
             ...prev,
             phase: 'complete',
             summary: msg.payload,
+            isPartial: false,
           }));
           activeRef.current = false;
           port.disconnect();
@@ -119,6 +122,36 @@ function useReviewPort(prInfo: PrInfo) {
     });
   }, [prInfo]);
 
+  const stopReview = useCallback(() => {
+    if (portRef.current) {
+      portRef.current.disconnect();
+      portRef.current = null;
+    }
+    activeRef.current = false;
+
+    setState((prev) => {
+      if (prev.phase !== 'reviewing') return prev;
+      const allFindings = prev.fileResults.flatMap((r) => r.findings ?? []);
+      const totalFiles = prev.progress?.totalFiles ?? 0;
+      const partialSummary: ReviewSummary = {
+        totalFiles,
+        reviewedFiles: prev.fileResults.filter((r) => r.status === 'success').length,
+        skippedFiles: 0,
+        errorFiles: prev.fileResults.filter((r) => r.status === 'error').length,
+        totalFindings: allFindings.length,
+        findingsBySeverity: {
+          Critical: allFindings.filter((f) => f.severity === 'Critical').length,
+          Warning: allFindings.filter((f) => f.severity === 'Warning').length,
+          Info: allFindings.filter((f) => f.severity === 'Info').length,
+        },
+        durationMs: 0,
+        iterationId: 0,
+        prTitle: '',
+      };
+      return { ...prev, phase: 'complete', summary: partialSummary, isPartial: true };
+    });
+  }, []);
+
   const reset = useCallback(() => {
     if (portRef.current) {
       portRef.current.disconnect();
@@ -128,7 +161,7 @@ function useReviewPort(prInfo: PrInfo) {
     setState(INITIAL_STATE);
   }, []);
 
-  return { state, setState, startReview, reset };
+  return { state, setState, startReview, stopReview, reset };
 }
 
 // --- Markdown builder ---
@@ -165,13 +198,11 @@ interface AppProps {
 }
 
 export default function App({ prInfo }: AppProps) {
-  const { state, setState, startReview, reset } = useReviewPort(prInfo);
+  const { state, setState, startReview, stopReview, reset } = useReviewPort(prInfo);
   const [copyLabel, setCopyLabel] = useState('Copy to Clipboard');
   const [postLabel, setPostLabel] = useState('Post to PR');
   const [posting, setPosting] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
 
-  // Button click: idle -> start review + open panel; otherwise toggle panel
   const handleButtonClick = () => {
     if (state.phase === 'idle') {
       startReview();
@@ -202,7 +233,6 @@ export default function App({ prInfo }: AppProps) {
       setCopyLabel('Copied!');
       setTimeout(() => setCopyLabel('Copy to Clipboard'), 2000);
     } catch {
-      // Fallback: some browsers block clipboard in shadow DOM
       setCopyLabel('Copy failed');
       setTimeout(() => setCopyLabel('Copy to Clipboard'), 2000);
     }
@@ -212,21 +242,26 @@ export default function App({ prInfo }: AppProps) {
     reset();
     setPostLabel('Post to PR');
     setPosting(false);
-    // Small delay so state resets before starting
     setTimeout(() => startReview(), 0);
   };
 
+  const handleDiscard = () => {
+    reset();
+    setPostLabel('Post to PR');
+    setPosting(false);
+  };
+
   const handlePostToPr = async () => {
-    if (posting || !state.summary) return;
+    if (posting || !state.summary || state.isPartial) return;
     setPosting(true);
     setPostLabel('Posting\u2026');
     try {
-      const result = await sendMessage('POST_REVIEW_COMMENTS', {
+      const result = (await sendMessage('POST_REVIEW_COMMENTS', {
         prInfo,
         fileResults: state.fileResults,
         iterationId: state.summary.iterationId,
         prTitle: state.summary.prTitle,
-      }) as { success: boolean; error?: string };
+      })) as { success: boolean; error?: string };
 
       if (result.success) {
         setPostLabel('Posted!');
@@ -242,48 +277,27 @@ export default function App({ prInfo }: AppProps) {
     }
   };
 
-  // Click outside panel to close
-  useEffect(() => {
-    if (!state.panelOpen) return;
-
-    const handleOutsideClick = (e: MouseEvent) => {
-      const panel = panelRef.current;
-      if (panel && !panel.contains(e.target as Node)) {
-        handleClose();
-      }
-    };
-
-    // Delay listener attachment to avoid the opening click closing immediately
-    const timer = setTimeout(() => {
-      document.addEventListener('mousedown', handleOutsideClick);
-    }, 0);
-
-    return () => {
-      clearTimeout(timer);
-      document.removeEventListener('mousedown', handleOutsideClick);
-    };
-  }, [state.panelOpen, handleClose]);
-
   return (
     <div className="pep-review-container">
       <ReviewButton phase={state.phase} onClick={handleButtonClick} />
       {state.panelOpen && state.phase !== 'idle' && (
-        <div ref={panelRef}>
-          <ReviewPanel
-            phase={state.phase as 'reviewing' | 'complete' | 'error'}
-            progress={state.progress}
-            fileResults={state.fileResults}
-            summary={state.summary}
-            errorMessage={state.errorMessage}
-            onExport={handleExport}
-            onCopy={handleCopy}
-            onPostToPr={handlePostToPr}
-            onReviewAgain={handleReviewAgain}
-            onClose={handleClose}
-            copyLabel={copyLabel}
-            postLabel={postLabel}
-          />
-        </div>
+        <ReviewPanel
+          phase={state.phase as 'reviewing' | 'complete' | 'error'}
+          progress={state.progress}
+          fileResults={state.fileResults}
+          summary={state.summary}
+          errorMessage={state.errorMessage}
+          isPartial={state.isPartial}
+          onExport={handleExport}
+          onCopy={handleCopy}
+          onPostToPr={handlePostToPr}
+          onReviewAgain={handleReviewAgain}
+          onStop={stopReview}
+          onDiscard={handleDiscard}
+          onClose={handleClose}
+          copyLabel={copyLabel}
+          postLabel={postLabel}
+        />
       )}
     </div>
   );
