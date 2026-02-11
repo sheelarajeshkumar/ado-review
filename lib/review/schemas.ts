@@ -14,6 +14,7 @@ export const FindingSchema = z.object({
   severity: z.enum(['Critical', 'Warning', 'Info']).describe('Issue severity'),
   message: z.string().describe('Clear description of the issue found'),
   suggestion: z.string().nullable().describe('Suggested fix or improvement'),
+  why: z.string().describe('Brief explanation of why this matters — reference best practices, security principles, or performance implications'),
 });
 
 /** Schema for the complete review of a single file. */

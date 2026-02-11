@@ -44,6 +44,11 @@ export default function App() {
   const [baseUrl, setBaseUrl] = useState('');
   const [providerFeedback, setProviderFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
+  // Fast model config state
+  const [showFastModel, setShowFastModel] = useState(false);
+  const [fastModel, setFastModel] = useState('');
+  const [fastProvider, setFastProvider] = useState<AiProvider | ''>('');
+
   useEffect(() => {
     loadOrgUrl();
     loadProviderConfig();
@@ -64,6 +69,11 @@ export default function App() {
       setModel(config.model);
       setApiKey(config.apiKey);
       setBaseUrl(config.baseUrl || '');
+      if (config.fastModel) {
+        setFastModel(config.fastModel);
+        setFastProvider(config.fastProvider || '');
+        setShowFastModel(true);
+      }
     }
   }
 
@@ -91,6 +101,8 @@ export default function App() {
         model: model.trim() || DEFAULT_MODELS[provider],
         apiKey: apiKey.trim(),
         ...(baseUrl.trim() ? { baseUrl: baseUrl.trim() } : {}),
+        ...(fastModel.trim() ? { fastModel: fastModel.trim() } : {}),
+        ...(fastModel.trim() && fastProvider ? { fastProvider: fastProvider as AiProvider } : {}),
       };
       await setAiProviderConfig(config);
       setProviderFeedback({ type: 'success', message: `${PROVIDER_LABELS[provider]} configuration saved.` });
@@ -337,6 +349,56 @@ export default function App() {
               />
             </div>
           )}
+
+          <div className="form-divider" />
+
+          <div className="advanced-section">
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => setShowFastModel(!showFastModel)}
+              style={{ marginBottom: showFastModel ? 12 : 0 }}
+            >
+              {showFastModel ? 'Hide' : 'Show'} Fast Model (optional)
+            </button>
+
+            {showFastModel && (
+              <>
+                <p className="description" style={{ marginBottom: 12, marginTop: 0 }}>
+                  Use a smaller, faster model for files with 150 lines or fewer.
+                </p>
+
+                <div className="form-group">
+                  <label htmlFor="fast-provider-select">Fast Provider</label>
+                  <select
+                    id="fast-provider-select"
+                    value={fastProvider}
+                    onChange={(e) => setFastProvider(e.target.value as AiProvider | '')}
+                    disabled={loading}
+                  >
+                    <option value="">Same as main provider</option>
+                    <option value="openai">{PROVIDER_LABELS.openai}</option>
+                    <option value="anthropic">{PROVIDER_LABELS.anthropic}</option>
+                    <option value="google">{PROVIDER_LABELS.google}</option>
+                    <option value="ollama">{PROVIDER_LABELS.ollama}</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="fast-model-input">Fast Model</label>
+                  <input
+                    id="fast-model-input"
+                    type="text"
+                    value={fastModel}
+                    onChange={(e) => setFastModel(e.target.value)}
+                    placeholder="gpt-4o-mini, gemini-2.0-flash-lite, etc."
+                    disabled={loading}
+                    autoComplete="off"
+                  />
+                </div>
+              </>
+            )}
+          </div>
 
           <div className="button-group">
             <button

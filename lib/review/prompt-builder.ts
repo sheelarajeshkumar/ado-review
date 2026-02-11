@@ -21,6 +21,7 @@ For each issue you find, provide:
 - A severity level: "Critical" (bugs, security issues), "Warning" (code smells, potential issues), or "Info" (style, suggestions)
 - A clear, concise description of the issue
 - An optional suggestion for how to fix it
+- A brief explanation of why this matters — reference best practices, security principles, or performance implications
 
 Focus on:
 - Bugs and logic errors

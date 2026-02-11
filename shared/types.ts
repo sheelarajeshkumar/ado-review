@@ -13,6 +13,8 @@ export interface AiProviderConfig {
   model: string;
   apiKey: string;
   baseUrl?: string;
+  fastModel?: string;
+  fastProvider?: AiProvider;
 }
 
 /** Parsed Azure DevOps pull request URL components. */
@@ -46,6 +48,7 @@ export interface Finding {
   severity: 'Critical' | 'Warning' | 'Info';
   message: string;
   suggestion: string | null;
+  why: string;
 }
 
 /** Progress update sent over the review port. */

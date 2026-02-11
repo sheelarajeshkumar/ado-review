@@ -15,6 +15,19 @@ import { FileReviewSchema, type FileReview } from './schemas';
 import { buildSystemPrompt, buildFileReviewPrompt } from './prompt-builder';
 
 /**
+ * Return a config pointing at the fast model if one is configured,
+ * otherwise return the original config unchanged.
+ */
+export function getFastConfig(config: AiProviderConfig): AiProviderConfig {
+  if (!config.fastModel) return config;
+  return {
+    ...config,
+    provider: config.fastProvider || config.provider,
+    model: config.fastModel,
+  };
+}
+
+/**
  * Create a Vercel AI SDK model instance from the provider config.
  */
 function createModel(config: AiProviderConfig) {

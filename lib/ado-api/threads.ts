@@ -54,9 +54,13 @@ export async function postInlineComment(
   const url = `${prInfo.baseUrl}/_apis/git/repositories/${prInfo.repo}/pullRequests/${prInfo.prId}/threads`;
 
   const severityTag = `**[${finding.severity}]**`;
-  const content = finding.suggestion
-    ? `${severityTag} ${finding.message}\n\n**Suggestion:** ${finding.suggestion}`
-    : `${severityTag} ${finding.message}`;
+  let content = `${severityTag} ${finding.message}`;
+  if (finding.suggestion) {
+    content += `\n\n**Suggestion:** ${finding.suggestion}`;
+  }
+  if (finding.why) {
+    content += `\n\n**Why:** ${finding.why}`;
+  }
 
   // Ensure filePath starts with '/' for ADO thread context
   const normalizedPath = filePath.startsWith('/') ? filePath : `/${filePath}`;

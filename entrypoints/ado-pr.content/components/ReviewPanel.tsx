@@ -100,6 +100,11 @@ function FileSection({ result }: { result: FileReviewResult }) {
               {f.suggestion && (
                 <div className="pep-finding-suggestion">{f.suggestion}</div>
               )}
+              {f.why && (
+                <div className="pep-finding-why">
+                  <strong>Why:</strong> {f.why}
+                </div>
+              )}
             </div>
           ))}
         </div>

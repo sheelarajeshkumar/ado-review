@@ -394,6 +394,16 @@
   line-height: 1.5;
 }
 
+.pep-finding-why {
+  font-size: 11px;
+  color: #605e5c;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: #f3f2f1;
+  border-radius: 3px;
+  line-height: 1.4;
+}
+
 /* === Action buttons === */
 
 .pep-action-btn {

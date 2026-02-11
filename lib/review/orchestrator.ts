@@ -17,8 +17,9 @@ import { getPrDetails, getLatestIterationId, getChangedFiles } from '@/lib/ado-a
 import { getFileContent } from '@/lib/ado-api/file-content';
 import { CHANGE_TYPE_MAP } from '@/lib/ado-api/types';
 import { shouldSkipFile, shouldSkipByChangeType } from './file-filter';
-import { reviewSingleFile } from './llm-reviewer';
+import { reviewSingleFile, getFastConfig } from './llm-reviewer';
 import { retryWithBackoff } from './retry';
+import { redactSecrets } from './secret-filter';
 import type { SingleFileResult } from './types';
 import type { Finding } from './schemas';
 
@@ -124,8 +125,11 @@ export async function runReview(
     try {
       const fileResult = await retryWithBackoff(
         async () => {
-          const content = await getFileContent(prInfo, filePath, prDetails.sourceCommitId);
-          return reviewSingleFile(filePath, content, changeType, providerConfig);
+          const raw = await getFileContent(prInfo, filePath, prDetails.sourceCommitId);
+          const { redacted: content } = redactSecrets(raw);
+          const lineCount = content.split('\n').length;
+          const effectiveConfig = lineCount <= 150 ? getFastConfig(providerConfig) : providerConfig;
+          return reviewSingleFile(filePath, content, changeType, effectiveConfig);
         },
         { maxRetries: 2, baseDelayMs: 1000 },
       );
