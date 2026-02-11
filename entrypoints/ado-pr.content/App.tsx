@@ -5,7 +5,7 @@
  * port communication via useReviewPort, and the floating panel UI.
  */
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { PrInfo, ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
 import { sendMessage } from '@/shared/messages';
@@ -202,6 +202,33 @@ export default function App({ prInfo }: AppProps) {
   const [copyLabel, setCopyLabel] = useState('Copy to Clipboard');
   const [postLabel, setPostLabel] = useState('Post to PR');
   const [posting, setPosting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [panelPos, setPanelPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+
+  const updatePanelPosition = useCallback(() => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setPanelPos({
+      top: rect.bottom + 8,
+      right: Math.max(0, window.innerWidth - rect.right),
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!state.panelOpen) return;
+    updatePanelPosition();
+    window.addEventListener('scroll', updatePanelPosition, true);
+    window.addEventListener('resize', updatePanelPosition);
+    return () => {
+      window.removeEventListener('scroll', updatePanelPosition, true);
+      window.removeEventListener('resize', updatePanelPosition);
+    };
+  }, [state.panelOpen, updatePanelPosition]);
+
+  const panelStyle = useMemo<React.CSSProperties>(
+    () => ({ top: panelPos.top, right: panelPos.right }),
+    [panelPos.top, panelPos.right],
+  );
 
   const handleButtonClick = () => {
     if (state.phase === 'idle') {
@@ -278,10 +305,11 @@ export default function App({ prInfo }: AppProps) {
   };
 
   return (
-    <div className="pep-review-container">
+    <div className="pep-review-container" ref={containerRef}>
       <ReviewButton phase={state.phase} onClick={handleButtonClick} />
       {state.panelOpen && state.phase !== 'idle' && (
         <ReviewPanel
+          panelStyle={panelStyle}
           phase={state.phase as 'reviewing' | 'complete' | 'error'}
           progress={state.progress}
           fileResults={state.fileResults}

@@ -12,11 +12,13 @@
 
 /** All Azure DevOps DOM selectors, organized by target element. */
 export const SELECTORS = {
-  /** Container for the PR header action buttons area */
+  /** Container for the PR header command bar (beside Approve / Complete buttons) */
   PR_HEADER_ACTIONS: [
-    '.repos-pr-header-actions',
+    '.repos-pr-header .bolt-header-command-bar',
+    '.bolt-header-command-bar-area .bolt-header-command-bar',
     '[data-focuszone-id] .bolt-header-command-bar',
     '.page-content .bolt-header-commandbar',
+    '.repos-pr-header-actions',
   ],
 
   /** The PR page title area (for verifying we're on a PR page) */

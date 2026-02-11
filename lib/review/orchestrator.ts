@@ -15,6 +15,7 @@ import type { PortMessage } from '@/shared/messages';
 import { getAiProviderConfig } from '@/shared/storage';
 import { getPrDetails, getLatestIterationId, getChangedFiles } from '@/lib/ado-api/pull-requests';
 import { getFileContent } from '@/lib/ado-api/file-content';
+import { getFileDiff } from '@/lib/ado-api/diff';
 import { CHANGE_TYPE_MAP } from '@/lib/ado-api/types';
 import { shouldSkipFile, shouldSkipByChangeType } from './file-filter';
 import { reviewSingleFile, getFastConfig } from './llm-reviewer';
@@ -129,7 +130,13 @@ export async function runReview(
           const { redacted: content } = redactSecrets(raw);
           const lineCount = content.split('\n').length;
           const effectiveConfig = lineCount <= 150 ? getFastConfig(providerConfig) : providerConfig;
-          return reviewSingleFile(filePath, content, changeType, effectiveConfig);
+
+          // Fetch diff to focus review on changed lines only (full file as context)
+          const changedRanges = changeType === 'add'
+            ? null // new file — review everything
+            : await getFileDiff(prInfo, filePath, prDetails.targetCommitId, prDetails.sourceCommitId);
+
+          return reviewSingleFile(filePath, content, changeType, effectiveConfig, changedRanges);
         },
         { maxRetries: 2, baseDelayMs: 1000 },
       );

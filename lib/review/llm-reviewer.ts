@@ -11,6 +11,7 @@ import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import type { AiProviderConfig } from '@/shared/types';
+import type { ChangedRange } from '@/lib/ado-api/diff';
 import { FileReviewSchema, type FileReview } from './schemas';
 import { buildSystemPrompt, buildFileReviewPrompt } from './prompt-builder';
 
@@ -53,9 +54,10 @@ function createModel(config: AiProviderConfig) {
  * Review a single file using the configured AI provider and return validated findings.
  *
  * @param filePath - Path to the file being reviewed
- * @param fileContent - The file's source code
+ * @param fileContent - The file's source code (full file for context)
  * @param changeType - The type of change ('add', 'edit', 'rename')
  * @param providerConfig - AI provider configuration from extension storage
+ * @param changedRanges - Ranges of changed lines, or null if entire file is new
  * @returns Validated FileReview with findings array and summary
  * @throws Error if the LLM returns no structured output
  */
@@ -64,6 +66,7 @@ export async function reviewSingleFile(
   fileContent: string,
   changeType: string,
   providerConfig: AiProviderConfig,
+  changedRanges: ChangedRange[] | null = null,
 ): Promise<FileReview> {
   const model = createModel(providerConfig);
 
@@ -71,7 +74,7 @@ export async function reviewSingleFile(
     model,
     output: Output.object({ schema: FileReviewSchema }),
     system: buildSystemPrompt(),
-    prompt: buildFileReviewPrompt(filePath, fileContent, changeType),
+    prompt: buildFileReviewPrompt(filePath, fileContent, changeType, changedRanges),
     maxOutputTokens: 4000,
   });
 

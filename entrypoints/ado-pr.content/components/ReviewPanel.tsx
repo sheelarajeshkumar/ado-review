@@ -18,6 +18,7 @@ interface ReviewPanelProps {
   summary: ReviewSummary | null;
   errorMessage: string | null;
   isPartial: boolean;
+  panelStyle?: React.CSSProperties;
   onExport: () => void;
   onCopy: () => void;
   onPostToPr: () => void;
@@ -120,6 +121,7 @@ export default function ReviewPanel({
   summary,
   errorMessage,
   isPartial,
+  panelStyle,
   onExport,
   onCopy,
   onPostToPr,
@@ -169,7 +171,7 @@ export default function ReviewPanel({
   }
 
   return (
-    <div className="pep-panel">
+    <div className="pep-panel" style={panelStyle}>
       {/* Header */}
       <div className="pep-panel-header">
         <div className="pep-panel-header-left">
