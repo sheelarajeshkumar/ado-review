@@ -9,11 +9,32 @@ import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import type { PrInfo, ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
 import { sendMessage } from '@/shared/messages';
+import { useTheme } from '@/lib/useTheme';
 import ReviewButton from './components/ReviewButton';
 import ReviewPanel from './components/ReviewPanel';
 import { applyAnnotations, clearAnnotations } from './inline-annotations';
 
 type Phase = 'idle' | 'reviewing' | 'complete' | 'error';
+
+// --- Animated unmount hook ---
+
+function useAnimatedUnmount(visible: boolean) {
+  const [shouldRender, setShouldRender] = useState(visible);
+  const [animationClass, setAnimationClass] = useState('');
+
+  useEffect(() => {
+    if (visible) {
+      setShouldRender(true);
+      setAnimationClass('animate-slide-in');
+    } else if (shouldRender) {
+      setAnimationClass('animate-slide-out');
+      const timer = setTimeout(() => setShouldRender(false), 150);
+      return () => clearTimeout(timer);
+    }
+  }, [visible]);
+
+  return { shouldRender, animationClass };
+}
 
 interface ReviewState {
   phase: Phase;
@@ -200,11 +221,15 @@ interface AppProps {
 
 export default function App({ prInfo }: AppProps) {
   const { state, setState, startReview, stopReview, reset } = useReviewPort(prInfo);
+  const { theme, toggleTheme, isDark } = useTheme();
   const [copyLabel, setCopyLabel] = useState('Copy to Clipboard');
   const [postLabel, setPostLabel] = useState('Post to PR');
   const [posting, setPosting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [panelPos, setPanelPos] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+
+  const panelVisible = state.panelOpen && state.phase !== 'idle';
+  const { shouldRender: shouldRenderPanel, animationClass } = useAnimatedUnmount(panelVisible);
 
   const updatePanelPosition = useCallback(() => {
     if (!containerRef.current) return;
@@ -319,28 +344,33 @@ export default function App({ prInfo }: AppProps) {
   };
 
   return (
-    <div className="pep-review-container" ref={containerRef}>
-      <ReviewButton phase={state.phase} onClick={handleButtonClick} />
-      {state.panelOpen && state.phase !== 'idle' && (
-        <ReviewPanel
-          panelStyle={panelStyle}
-          phase={state.phase as 'reviewing' | 'complete' | 'error'}
-          progress={state.progress}
-          fileResults={state.fileResults}
-          summary={state.summary}
-          errorMessage={state.errorMessage}
-          isPartial={state.isPartial}
-          onExport={handleExport}
-          onCopy={handleCopy}
-          onPostToPr={handlePostToPr}
-          onReviewAgain={handleReviewAgain}
-          onStop={stopReview}
-          onDiscard={handleDiscard}
-          onClose={handleClose}
-          copyLabel={copyLabel}
-          postLabel={postLabel}
-        />
-      )}
+    <div className={isDark ? 'dark' : ''}>
+      <div className="relative inline-block" ref={containerRef}>
+        <ReviewButton phase={state.phase} onClick={handleButtonClick} />
+        {shouldRenderPanel && (
+          <ReviewPanel
+            panelStyle={panelStyle}
+            animationClass={animationClass}
+            phase={state.phase as 'reviewing' | 'complete' | 'error'}
+            progress={state.progress}
+            fileResults={state.fileResults}
+            summary={state.summary}
+            errorMessage={state.errorMessage}
+            isPartial={state.isPartial}
+            isDark={isDark}
+            onToggleTheme={toggleTheme}
+            onExport={handleExport}
+            onCopy={handleCopy}
+            onPostToPr={handlePostToPr}
+            onReviewAgain={handleReviewAgain}
+            onStop={stopReview}
+            onDiscard={handleDiscard}
+            onClose={handleClose}
+            copyLabel={copyLabel}
+            postLabel={postLabel}
+          />
+        )}
+      </div>
     </div>
   );
 }

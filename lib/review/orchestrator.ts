@@ -12,7 +12,7 @@
 
 import type { PrInfo, ReviewProgress, ReviewSummary, FileReviewResult } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
-import { getAiProviderConfig } from '@/shared/storage';
+import { getAiProviderConfig, recordReviewComplete } from '@/shared/storage';
 import { getPrDetails, getLatestIterationId, getChangedFiles } from '@/lib/ado-api/pull-requests';
 import { getFileContent } from '@/lib/ado-api/file-content';
 import { getFileDiff } from '@/lib/ado-api/diff';
@@ -193,5 +193,6 @@ export async function runReview(
     prTitle: prDetails.title,
   };
 
+  await recordReviewComplete(summary);
   onProgress({ type: 'REVIEW_COMPLETE', payload: summary });
 }

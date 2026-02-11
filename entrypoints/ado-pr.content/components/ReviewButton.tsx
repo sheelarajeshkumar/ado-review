@@ -1,9 +1,4 @@
-/**
- * Presentational review button injected into Azure DevOps PR pages.
- *
- * Renders button text/state based on the current review phase.
- * All port logic lives in the parent App via useReviewPort.
- */
+import { cn } from '@/lib/cn';
 
 interface ReviewButtonProps {
   phase: 'idle' | 'reviewing' | 'complete' | 'error';
@@ -28,7 +23,15 @@ export default function ReviewButton({ phase, onClick }: ReviewButtonProps) {
 
   return (
     <button
-      className={`pep-review-btn${isReviewing ? ' pep-review-btn--reviewing' : ''}`}
+      className={cn(
+        'inline-flex items-center gap-1.5 px-3 py-1.5 border-none rounded',
+        'font-sans text-[13px] font-semibold leading-none cursor-pointer whitespace-nowrap',
+        'transition-colors duration-150',
+        isReviewing
+          ? 'bg-fluent-text-secondary text-white cursor-wait animate-pulse-subtle'
+          : 'bg-fluent-primary text-white hover:bg-fluent-primary-hover active:bg-fluent-primary-active',
+        isReviewing && 'pointer-events-none',
+      )}
       onClick={onClick}
       disabled={isReviewing}
       type="button"

@@ -1,0 +1,160 @@
+@import "tailwindcss";
+
+@theme {
+  /* Fluent Design colors — light defaults */
+  --color-fluent-primary: #0078d4;
+  --color-fluent-primary-hover: #106ebe;
+  --color-fluent-primary-active: #005a9e;
+  --color-fluent-primary-soft: rgba(0, 120, 212, 0.08);
+
+  --color-fluent-text: #242424;
+  --color-fluent-text-secondary: #616161;
+  --color-fluent-text-disabled: #a19f9d;
+
+  --color-fluent-bg: #ffffff;
+  --color-fluent-bg-subtle: #fafafa;
+  --color-fluent-bg-hover: #f5f5f5;
+  --color-fluent-bg-page: #f5f5f5;
+
+  --color-fluent-border: #e0e0e0;
+  --color-fluent-border-subtle: #ebebeb;
+
+  --color-fluent-disabled-bg: #c8c6c4;
+  --color-fluent-disabled-text: #a19f9d;
+
+  /* Severity colors */
+  --color-severity-critical-bg: #fde7e9;
+  --color-severity-critical-text: #a80000;
+  --color-severity-critical-border: #d13438;
+
+  --color-severity-warning-bg: #fff4ce;
+  --color-severity-warning-text: #835b00;
+  --color-severity-warning-border: #f0c800;
+
+  --color-severity-info-bg: #e8f4fd;
+  --color-severity-info-text: #0067b8;
+  --color-severity-info-border: #0078d4;
+
+  --color-severity-clean-bg: #dff6dd;
+  --color-severity-clean-text: #107c10;
+  --color-severity-clean-border: #107c10;
+
+  /* Status colors for options page */
+  --color-status-session-bg: #e6f4ea;
+  --color-status-session-text: #1e7e34;
+
+  --color-status-pat-bg: #fff8e1;
+  --color-status-pat-text: #c77c00;
+
+  --color-status-none-bg: #fdecea;
+  --color-status-none-text: #c62828;
+
+  --color-status-checking-bg: #e8eaf6;
+  --color-status-checking-text: #666666;
+
+  /* Code block */
+  --color-code-bg: #1e1e1e;
+  --color-code-text: #d4d4d4;
+
+  /* Font families */
+  --font-sans: "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "Cascadia Code", "Fira Code", monospace;
+
+  /* Custom animations */
+  --animate-slide-in: slide-in 0.2s ease-out;
+  --animate-slide-out: slide-out 0.15s ease-in forwards;
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.15s ease-in forwards;
+  --animate-shimmer: shimmer 1.5s ease-in-out infinite;
+  --animate-fade-in: fade-in 0.25s ease-out;
+  --animate-pulse-subtle: pulse-subtle 2s ease-in-out infinite;
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes slide-out {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-8px); }
+  }
+
+  @keyframes accordion-down {
+    from { grid-template-rows: 0fr; }
+    to   { grid-template-rows: 1fr; }
+  }
+
+  @keyframes accordion-up {
+    from { grid-template-rows: 1fr; }
+    to   { grid-template-rows: 0fr; }
+  }
+
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.7; }
+  }
+}
+
+/* ===== Dark mode overrides ===== */
+.dark {
+  --color-fluent-primary: #4ea8ee;
+  --color-fluent-primary-hover: #6dbcf5;
+  --color-fluent-primary-active: #3b96de;
+  --color-fluent-primary-soft: rgba(78, 168, 238, 0.12);
+
+  --color-fluent-text: #e4e4e4;
+  --color-fluent-text-secondary: #a0a0a0;
+  --color-fluent-text-disabled: #6b6b6b;
+
+  --color-fluent-bg: #1e1e1e;
+  --color-fluent-bg-subtle: #252525;
+  --color-fluent-bg-hover: #2d2d2d;
+  --color-fluent-bg-page: #141414;
+
+  --color-fluent-border: #3a3a3a;
+  --color-fluent-border-subtle: #303030;
+
+  --color-fluent-disabled-bg: #404040;
+  --color-fluent-disabled-text: #6b6b6b;
+
+  --color-severity-critical-bg: #3b1517;
+  --color-severity-critical-text: #f5a0a5;
+  --color-severity-critical-border: #e05256;
+
+  --color-severity-warning-bg: #3b2e0a;
+  --color-severity-warning-text: #f0d070;
+  --color-severity-warning-border: #d4a832;
+
+  --color-severity-info-bg: #0d2840;
+  --color-severity-info-text: #7cc4f5;
+  --color-severity-info-border: #4ea8ee;
+
+  --color-severity-clean-bg: #0d2b10;
+  --color-severity-clean-text: #80d486;
+  --color-severity-clean-border: #4caf50;
+
+  --color-status-session-bg: #0d2b10;
+  --color-status-session-text: #80d486;
+
+  --color-status-pat-bg: #3b2e0a;
+  --color-status-pat-text: #f0d070;
+
+  --color-status-none-bg: #3b1517;
+  --color-status-none-text: #f5a0a5;
+
+  --color-status-checking-bg: #252530;
+  --color-status-checking-text: #8888aa;
+
+  --color-code-bg: #141414;
+  --color-code-text: #d4d4d4;
+}

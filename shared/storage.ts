@@ -5,7 +5,7 @@
  * to ensure consistent key names and type safety.
  */
 
-import type { AiProviderConfig } from './types';
+import type { AiProviderConfig, ReviewSummary } from './types';
 
 /** Storage key constants. */
 export const STORAGE_KEYS = {
@@ -14,7 +14,29 @@ export const STORAGE_KEYS = {
   OPENAI_API_KEY: 'openai_api_key',
   AI_PROVIDER_CONFIG: 'ai_provider_config',
   ORG_URL: 'org_url',
+  THEME: 'theme',
+  REVIEW_STATS: 'review_stats',
 } as const;
+
+/** Aggregate review statistics persisted across sessions. */
+export interface ReviewStats {
+  totalReviews: number;
+  totalFindings: number;
+  totalFilesReviewed: number;
+  findingsBySeverity: { Critical: number; Warning: number; Info: number };
+  lastReviewAt: string | null;
+}
+
+export type Theme = 'light' | 'dark';
+
+export async function getTheme(): Promise<Theme> {
+  const result = await browser.storage.local.get(STORAGE_KEYS.THEME);
+  return (result[STORAGE_KEYS.THEME] as Theme) ?? 'light';
+}
+
+export async function setTheme(theme: Theme): Promise<void> {
+  await browser.storage.local.set({ [STORAGE_KEYS.THEME]: theme });
+}
 
 /**
  * Retrieve the stored Personal Access Token.
@@ -109,4 +131,33 @@ export async function getOrgUrl(): Promise<string | null> {
  */
 export async function setOrgUrl(url: string): Promise<void> {
   await browser.storage.local.set({ [STORAGE_KEYS.ORG_URL]: url });
+}
+
+const EMPTY_STATS: ReviewStats = {
+  totalReviews: 0,
+  totalFindings: 0,
+  totalFilesReviewed: 0,
+  findingsBySeverity: { Critical: 0, Warning: 0, Info: 0 },
+  lastReviewAt: null,
+};
+
+export async function getReviewStats(): Promise<ReviewStats> {
+  const result = await browser.storage.local.get(STORAGE_KEYS.REVIEW_STATS);
+  return (result[STORAGE_KEYS.REVIEW_STATS] as ReviewStats) ?? EMPTY_STATS;
+}
+
+export async function recordReviewComplete(summary: ReviewSummary): Promise<void> {
+  const prev = await getReviewStats();
+  const updated: ReviewStats = {
+    totalReviews: prev.totalReviews + 1,
+    totalFindings: prev.totalFindings + summary.totalFindings,
+    totalFilesReviewed: prev.totalFilesReviewed + summary.reviewedFiles,
+    findingsBySeverity: {
+      Critical: prev.findingsBySeverity.Critical + summary.findingsBySeverity.Critical,
+      Warning: prev.findingsBySeverity.Warning + summary.findingsBySeverity.Warning,
+      Info: prev.findingsBySeverity.Info + summary.findingsBySeverity.Info,
+    },
+    lastReviewAt: new Date().toISOString(),
+  };
+  await browser.storage.local.set({ [STORAGE_KEYS.REVIEW_STATS]: updated });
 }

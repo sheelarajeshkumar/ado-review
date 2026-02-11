@@ -26,9 +26,12 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@thedutchcoder/postcss-rem-to-px": "^0.0.2",
     "@types/react": "^19.2.13",
     "@types/react-dom": "^19.2.3",
     "@wxt-dev/module-react": "^1.1.5",
+    "tailwindcss": "^4.1.18",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
   }
