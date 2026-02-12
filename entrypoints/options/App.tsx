@@ -7,17 +7,17 @@ import { useTheme } from '@/lib/useTheme';
 import { ThemeToggle } from '@/lib/ThemeToggle';
 
 const DEFAULT_MODELS: Record<AiProvider, string> = {
-  openai: 'gpt-4o',
-  anthropic: 'claude-sonnet-4-20250514',
-  google: 'gemini-2.0-flash',
-  ollama: 'llama3',
+  openai: "gpt-4o",
+  anthropic: "claude-sonnet-4-20250514",
+  google: "gemini-2.0-flash",
+  ollama: "codellama:7b",
 };
 
 const MODEL_PLACEHOLDERS: Record<AiProvider, string> = {
-  openai: 'gpt-4o',
-  anthropic: 'claude-sonnet-4-20250514',
-  google: 'gemini-2.0-flash',
-  ollama: 'llama3',
+  openai: "gpt-4o",
+  anthropic: "claude-sonnet-4-20250514",
+  google: "gemini-2.0-flash",
+  ollama: "codellama:7b",
 };
 
 const PROVIDER_LABELS: Record<AiProvider, string> = {
@@ -91,7 +91,7 @@ export default function App() {
     setProvider(newProvider);
     setModel(DEFAULT_MODELS[newProvider]);
     setApiKey('');
-    setBaseUrl(newProvider === 'ollama' ? 'http://localhost:11434/v1' : '');
+    setBaseUrl(newProvider === 'ollama' ? 'http://localhost:11434' : '');
     setProviderFeedback(null);
   }
 
@@ -377,7 +377,7 @@ export default function App() {
                     type="text"
                     value={baseUrl}
                     onChange={(e) => setBaseUrl(e.target.value)}
-                    placeholder={provider === 'ollama' ? 'http://localhost:11434/v1' : 'https://your-resource.openai.azure.com/...'}
+                    placeholder={provider === 'ollama' ? 'http://localhost:11434' : 'https://your-resource.openai.azure.com/...'}
                     disabled={loading}
                     autoComplete="off"
                     className={inputClass}

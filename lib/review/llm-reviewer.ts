@@ -1,15 +1,16 @@
 /**
- * Single-file LLM code review via Vercel AI SDK.
+ * Single-file LLM code review via Vercel AI SDK (cloud providers)
+ * and official Ollama client (local models).
  *
  * Sends a file's content to the configured AI provider and returns a
- * validated structured review using AI SDK's generateText with
- * Output.object() and the Zod-validated FileReviewSchema.
+ * validated structured review using Zod-validated FileReviewSchema.
  */
 
 import { generateText, Output } from 'ai';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createAnthropic } from '@ai-sdk/anthropic';
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { Ollama } from 'ollama/browser';
 import type { AiProviderConfig } from '@/shared/types';
 import type { ChangedRange } from '@/lib/ado-api/diff';
 import { FileReviewSchema, type FileReview } from './schemas';
@@ -30,6 +31,7 @@ export function getFastConfig(config: AiProviderConfig): AiProviderConfig {
 
 /**
  * Create a Vercel AI SDK model instance from the provider config.
+ * Returns null for Ollama (handled separately via the official client).
  */
 function createModel(config: AiProviderConfig) {
   switch (config.provider) {
@@ -37,17 +39,81 @@ function createModel(config: AiProviderConfig) {
       return createOpenAI({
         apiKey: config.apiKey,
         ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
-      })(config.model);
+      }).chat(config.model);
     case 'anthropic':
       return createAnthropic({ apiKey: config.apiKey })(config.model);
     case 'google':
       return createGoogleGenerativeAI({ apiKey: config.apiKey })(config.model);
     case 'ollama':
-      return createOpenAI({
-        apiKey: 'ollama',
-        baseURL: config.baseUrl || 'http://localhost:11434/v1',
-      })(config.model);
+      return null;
   }
+}
+
+/**
+ * JSON Schema passed to Ollama's `format` parameter to constrain output
+ * to the exact shape our Zod FileReviewSchema expects.
+ */
+const OLLAMA_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    findings: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          line: { type: 'number', description: 'The line number where the issue is' },
+          severity: { type: 'string', enum: ['Critical', 'Warning', 'Info'] },
+          message: { type: 'string', description: 'Clear description of the issue' },
+          suggestion: { type: ['string', 'null'], description: 'Suggested fix or improvement' },
+          suggestedCode: { type: ['string', 'null'], description: 'Replacement code for the flagged lines, or null' },
+          why: { type: 'string', description: 'Brief explanation of why this matters' },
+        },
+        required: ['line', 'severity', 'message', 'suggestion', 'suggestedCode', 'why'],
+      },
+    },
+    summary: { type: 'string', description: 'One-sentence summary of this file review' },
+  },
+  required: ['findings', 'summary'],
+};
+
+/**
+ * Review a file using the official Ollama client directly.
+ * Passes a JSON Schema via `format` to constrain the model output,
+ * then validates with Zod.
+ */
+async function reviewWithOllama(
+  filePath: string,
+  fileContent: string,
+  changeType: string,
+  config: AiProviderConfig,
+  changedRanges: ChangedRange[] | null,
+): Promise<FileReview> {
+  const client = new Ollama({ host: config.baseUrl || 'http://localhost:11434' });
+
+  const response = await client.chat({
+    model: config.model,
+    messages: [
+      { role: 'system', content: buildSystemPrompt() },
+      { role: 'user', content: buildFileReviewPrompt(filePath, fileContent, changeType, changedRanges) },
+    ],
+    format: OLLAMA_RESPONSE_SCHEMA,
+    stream: false,
+  });
+
+  const raw = response.message.content;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    throw new Error(`Ollama returned invalid JSON for ${filePath}: ${raw.slice(0, 200)}`);
+  }
+
+  const result = FileReviewSchema.safeParse(parsed);
+  if (!result.success) {
+    throw new Error(`Ollama response failed validation for ${filePath}: ${result.error.message}`);
+  }
+
+  return result.data;
 }
 
 /**
@@ -68,7 +134,12 @@ export async function reviewSingleFile(
   providerConfig: AiProviderConfig,
   changedRanges: ChangedRange[] | null = null,
 ): Promise<FileReview> {
-  const model = createModel(providerConfig);
+  // Ollama uses its own client directly
+  if (providerConfig.provider === 'ollama') {
+    return reviewWithOllama(filePath, fileContent, changeType, providerConfig, changedRanges);
+  }
+
+  const model = createModel(providerConfig)!;
 
   const { output } = await generateText({
     model,
