@@ -1,5 +1,5 @@
 {
-  "name": "pep-review",
+  "name": "ado-review",
   "version": "0.1.0",
   "description": "AI-powered code review for Azure DevOps pull requests",
   "private": true,

@@ -229,7 +229,7 @@ export default function App() {
       <div className="max-w-xl mx-auto px-6 py-8 font-sans text-fluent-text leading-normal">
         {/* Header with theme toggle */}
         <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-semibold text-fluent-text">PEP Review Settings</h1>
+          <h1 className="text-2xl font-semibold text-fluent-text">ADO Review Settings</h1>
           <ThemeToggle isDark={isDark} onToggle={toggleTheme} size="md" />
         </div>
 
@@ -249,7 +249,7 @@ export default function App() {
                   type="text"
                   value={orgUrl}
                   onChange={(e) => setOrgUrlState(e.target.value)}
-                  placeholder="PepsiCoIT or https://dev.azure.com/PepsiCoIT"
+                  placeholder="myorg or https://dev.azure.com/myorg"
                   disabled={loading}
                   autoComplete="off"
                   className={inputClass}

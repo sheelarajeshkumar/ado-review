@@ -1,5 +1,5 @@
 /**
- * Shared constants for PEP Review extension.
+ * Shared constants for ADO Review extension.
  *
  * URL patterns, API base URLs, and configuration values.
  */

@@ -75,7 +75,7 @@ export default function App() {
                 <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" />
               </svg>
             </div>
-            <span className="text-sm font-semibold tracking-tight">PEP Review</span>
+            <span className="text-sm font-semibold tracking-tight">ADO Review</span>
           </div>
           <div className="flex items-center gap-1">
             <ThemeToggle isDark={isDark} onToggle={toggleTheme} size="sm" />

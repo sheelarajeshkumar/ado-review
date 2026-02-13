@@ -86,7 +86,7 @@ export function checkSelectorHealth(): void {
     const found = querySelector(selectors as readonly string[]);
     if (!found) {
       console.warn(
-        `[PEP Review] Selector "${name}" matched no elements. Azure DevOps UI may have updated.`,
+        `[ADO Review] Selector "${name}" matched no elements. Azure DevOps UI may have updated.`,
       );
     }
   }

@@ -15,10 +15,10 @@ export default function ReviewButton({ phase, onClick }: ReviewButtonProps) {
       break;
     case 'complete':
     case 'error':
-      label = 'PEP Review';
+      label = 'ADO Review';
       break;
     default:
-      label = 'PEP Review';
+      label = 'ADO Review';
   }
 
   return (

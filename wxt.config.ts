@@ -5,7 +5,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   vite: () => ({ plugins: [tailwindcss()] }),
   manifest: {
-    name: 'PEP Review',
+    name: 'ADO Review',
     description: 'AI-powered code review for Azure DevOps pull requests',
     permissions: ['storage'],
     host_permissions: [

@@ -63,7 +63,7 @@ async function tryMount(ctx: InstanceType<typeof ContentScriptContext>): Promise
   // Wait for the PR page DOM to render
   const anchor = await waitForElement(SELECTORS.PR_HEADER_ACTIONS, 5000);
   if (!anchor) {
-    console.warn('[PEP Review] Could not find PR header. Selectors may need updating.');
+    console.warn('[ADO Review] Could not find PR header. Selectors may need updating.');
     return;
   }
 
@@ -71,7 +71,7 @@ async function tryMount(ctx: InstanceType<typeof ContentScriptContext>): Promise
   if (!prInfo) return;
 
   const ui = await createShadowRootUi(ctx, {
-    name: 'pep-review-button',
+    name: 'ado-review-button',
     position: 'inline',
     anchor,
     onMount: (uiContainer: HTMLElement) => {

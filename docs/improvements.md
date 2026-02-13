@@ -73,7 +73,7 @@
 * **What we can achieve:** This significantly **increases developer velocity**. It transforms the tool from a "commenting assistant" into an "automated editor," removing the friction of manual copy-pasting during the review loop.
 
 #### Implementation Summary
-* **Panel button:** `CopyFixButton` React component inside each `.pep-finding-suggestion` block; shows "Copied!" for 2 seconds after click
+* **Panel button:** `CopyFixButton` React component inside each `.ado-finding-suggestion` block; shows "Copied!" for 2 seconds after click
 * **Popover button:** HTML "Copy Fix" button in the Shadow DOM popover with the same behavior
 * **Clipboard API:** Uses `navigator.clipboard.writeText()` with graceful error handling
 

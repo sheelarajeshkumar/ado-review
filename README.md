@@ -1,10 +1,10 @@
-# PEP Review
+# ADO Review
 
 AI-powered code review Chrome extension for Azure DevOps pull requests. Reviews changed files using configurable AI providers (OpenAI, Anthropic, Google Gemini, Ollama), posts inline comments with findings, and generates a summary — all directly from the PR page.
 
 ## Features
 
-- **One-click review** — A "PEP Review" button injected into every Azure DevOps PR page
+- **One-click review** — An "ADO Review" button injected into every Azure DevOps PR page
 - **Multi-provider AI** — Choose from OpenAI, Anthropic Claude, Google Gemini, or local Ollama models
 - **Multi-model routing** — Optional fast model for small files (≤150 lines), deep model for complex ones
 - **Changed-lines-only review** — Reviews only the changed lines in each file, using the full file as context
@@ -73,7 +73,7 @@ Chrome Extension (Manifest V3)
 
 ## Review Pipeline
 
-When a user clicks "PEP Review" on a PR page:
+When a user clicks "ADO Review" on a PR page:
 
 1. **Authenticate** — Verify Azure DevOps access (session cookies or PAT)
 2. **Fetch PR data** — Get PR details, latest iteration, and changed files
@@ -125,8 +125,8 @@ The built extension will be in `.output/chrome-mv3/`.
 
 ### Configure
 
-1. Click the PEP Review extension icon or go to the options page
-2. Enter your **Azure DevOps organization** name or URL (e.g., `PepsiCoIT` or `https://dev.azure.com/PepsiCoIT`)
+1. Click the ADO Review extension icon or go to the options page
+2. Enter your **Azure DevOps organization** name or URL (e.g., `myorg` or `https://dev.azure.com/myorg`)
 3. Select your **AI provider** and enter the **model name** and **API key**
 4. (Optional) Configure a **fast model** for small files under the collapsible "Fast Model" section
 5. (Optional) If session auth doesn't work, enter an **Azure DevOps PAT** with Code (Read) scope
@@ -198,3 +198,27 @@ pnpm test:watch
 | **Info** | Style suggestions, minor improvements | Naming conventions, simplification opportunities |
 
 Each finding includes a **Why** explanation — a brief rationale referencing best practices, security principles, or performance implications to help developers learn from the review.
+
+## Chrome Web Store Publishing
+
+This repository includes a GitHub Action (`.github/workflows/publish.yml`) that automatically publishes to the Chrome Web Store on tagged releases.
+
+### Setup
+
+1. Register as a [Chrome Web Store developer](https://chrome.google.com/webstore/devconsole)
+2. Create an OAuth2 client in the [Google Cloud Console](https://console.cloud.google.com/apis/credentials) (Desktop application type)
+3. Obtain a refresh token using the Chrome Web Store API OAuth2 flow
+4. Add these secrets to your GitHub repository:
+   - `CHROME_EXTENSION_ID` — Your extension ID from the Chrome Web Store
+   - `CHROME_CLIENT_ID` — OAuth2 client ID
+   - `CHROME_CLIENT_SECRET` — OAuth2 client secret
+   - `CHROME_REFRESH_TOKEN` — OAuth2 refresh token
+
+### Publishing
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow will build, zip, upload, and publish the extension automatically.

@@ -1,5 +1,5 @@
 /**
- * Background service worker for PEP Review extension.
+ * Background service worker for ADO Review extension.
  *
  * Handles messages from content scripts, popup, and options page
  * via a handler registry pattern. All handlers are async and the
@@ -70,11 +70,11 @@ export default defineBackground(() => {
     });
 
     port.onDisconnect.addListener(() => {
-      console.log('[PEP Review] Review port disconnected');
+      console.log('[ADO Review] Review port disconnected');
     });
   });
 
-  console.log('[PEP Review] Service worker started');
+  console.log('[ADO Review] Service worker started');
 });
 
 /**

@@ -45,7 +45,7 @@ export async function retryWithBackoff<T>(
       );
 
       console.warn(
-        `[PEP Review] Retry attempt ${attempt + 1}/${maxRetries}`,
+        `[ADO Review] Retry attempt ${attempt + 1}/${maxRetries}`,
       );
 
       await new Promise((resolve) => setTimeout(resolve, delay));

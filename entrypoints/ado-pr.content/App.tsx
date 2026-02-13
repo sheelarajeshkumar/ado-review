@@ -1,5 +1,5 @@
 /**
- * Root React component for the PEP Review content script UI.
+ * Root React component for the ADO Review content script UI.
  *
  * Manages the review state machine (idle/reviewing/complete/error),
  * port communication via useReviewPort, and the floating panel UI.
@@ -189,7 +189,7 @@ function useReviewPort(prInfo: PrInfo) {
 // --- Markdown builder ---
 
 function buildMarkdown(fileResults: FileReviewResult[], summary: ReviewSummary | null): string {
-  const lines: string[] = ['# PEP Review Results', ''];
+  const lines: string[] = ['# ADO Review Results', ''];
 
   if (summary) {
     lines.push(
@@ -285,7 +285,7 @@ export default function App({ prInfo }: AppProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'pep-review-findings.md';
+    a.download = 'ado-review-findings.md';
     a.click();
     URL.revokeObjectURL(url);
   };

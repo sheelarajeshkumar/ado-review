@@ -357,7 +357,7 @@ export default function ReviewPanel({
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-fluent-border-subtle shrink-0">
         <div className="flex items-center gap-2.5 min-w-0">
-          <span className="text-[15px] font-bold text-fluent-text shrink-0">PEP Review</span>
+          <span className="text-[15px] font-bold text-fluent-text shrink-0">ADO Review</span>
           {headerSubtitle && (
             <span className="text-[11px] font-medium text-fluent-text-secondary whitespace-nowrap overflow-hidden text-ellipsis
               bg-fluent-bg-subtle px-2 py-0.5 rounded-full">

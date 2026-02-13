@@ -1,5 +1,5 @@
 /**
- * Shared type definitions for PEP Review extension.
+ * Shared type definitions for ADO Review extension.
  *
  * Used across content scripts, service worker, and extension pages.
  */

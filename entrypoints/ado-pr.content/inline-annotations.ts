@@ -1,5 +1,5 @@
 /**
- * Inline diff annotations for PEP Review.
+ * Inline diff annotations for ADO Review.
  *
  * After a review completes, injects colored severity dots into the Azure DevOps
  * diff view next to lines that have findings. Clicking a dot shows a Shadow DOM
@@ -16,8 +16,8 @@ import { SELECTORS, querySelectorAllFallback } from '@/lib/selectors';
 // Constants
 // ---------------------------------------------------------------------------
 
-const MARKER_ATTR = 'data-pep-review-marker';
-const POPOVER_HOST_ID = 'pep-review-popover-host';
+const MARKER_ATTR = 'data-ado-review-marker';
+const POPOVER_HOST_ID = 'ado-review-popover-host';
 const SEVERITY_COLORS: Record<string, string> = {
   Critical: '#d13438',
   Warning: '#c87d00',
@@ -44,7 +44,7 @@ export function applyAnnotations(fileResults: FileReviewResult[]): void {
     applyMarkersToDOM();
     startObserver();
   } catch (err) {
-    console.warn('[PEP Review] Inline annotations failed — panel still works.', err);
+    console.warn('[ADO Review] Inline annotations failed — panel still works.', err);
   }
 }
 
@@ -187,7 +187,7 @@ function isDiffContent(el: Element): boolean {
 function applyMarkersToDOM(): void {
   const sections = getDiffFileSections();
   if (sections.size === 0) {
-    console.warn('[PEP Review] No diff file sections found — inline annotations skipped.');
+    console.warn('[ADO Review] No diff file sections found — inline annotations skipped.');
     return;
   }
 
@@ -289,23 +289,23 @@ function showPopover(anchor: Element, findings: Finding[], filePath: string): vo
 
   shadow.innerHTML = `
     <style>${popoverStyles()}</style>
-    <div class="pep-popover" style="top: ${rect.bottom + window.scrollY + 4}px; left: ${rect.left + window.scrollX}px;">
-      <div class="pep-popover-header">
-        <span class="pep-popover-path">${escapeHtml(truncatePath(filePath))}</span>
-        <button class="pep-popover-close" type="button">&times;</button>
+    <div class="ado-popover" style="top: ${rect.bottom + window.scrollY + 4}px; left: ${rect.left + window.scrollX}px;">
+      <div class="ado-popover-header">
+        <span class="ado-popover-path">${escapeHtml(truncatePath(filePath))}</span>
+        <button class="ado-popover-close" type="button">&times;</button>
       </div>
-      <div class="pep-popover-body">
+      <div class="ado-popover-body">
         ${findings.map((f) => renderPopoverFinding(f)).join('')}
       </div>
     </div>
   `;
 
   // Close handlers
-  const closeBtn = shadow.querySelector('.pep-popover-close');
+  const closeBtn = shadow.querySelector('.ado-popover-close');
   closeBtn?.addEventListener('click', hidePopover);
 
   const onClickOutside = (e: MouseEvent) => {
-    if (!shadow?.querySelector('.pep-popover')?.contains(e.target as Node) && e.target !== anchor) {
+    if (!shadow?.querySelector('.ado-popover')?.contains(e.target as Node) && e.target !== anchor) {
       hidePopover();
       document.removeEventListener('click', onClickOutside, true);
     }
@@ -350,25 +350,25 @@ function hidePopover(): void {
 function renderPopoverFinding(f: Finding): string {
   const sevColor = SEVERITY_COLORS[f.severity] ?? SEVERITY_COLORS.Info;
   const suggestionHtml = f.suggestion
-    ? `<div class="pep-popover-suggestion-text">${escapeHtml(f.suggestion)}</div>`
+    ? `<div class="ado-popover-suggestion-text">${escapeHtml(f.suggestion)}</div>`
     : '';
   const codeHtml = f.suggestedCode
-    ? `<div class="pep-popover-code-suggestion">
-         <pre class="pep-popover-code-block"><code>${escapeHtml(f.suggestedCode)}</code></pre>
-         <button class="pep-popover-copy-btn" data-copy-suggestion="${escapeAttr(f.suggestedCode)}" type="button">Copy Fix</button>
+    ? `<div class="ado-popover-code-suggestion">
+         <pre class="ado-popover-code-block"><code>${escapeHtml(f.suggestedCode)}</code></pre>
+         <button class="ado-popover-copy-btn" data-copy-suggestion="${escapeAttr(f.suggestedCode)}" type="button">Copy Fix</button>
        </div>`
     : '';
   const whyHtml = f.why
-    ? `<div class="pep-popover-why"><strong>Why:</strong> ${escapeHtml(f.why)}</div>`
+    ? `<div class="ado-popover-why"><strong>Why:</strong> ${escapeHtml(f.why)}</div>`
     : '';
 
   return `
-    <div class="pep-popover-finding">
-      <div class="pep-popover-finding-header">
-        <span class="pep-popover-line">L${f.line}</span>
-        <span class="pep-popover-badge" style="background: ${sevColor}20; color: ${sevColor};">${escapeHtml(f.severity)}</span>
+    <div class="ado-popover-finding">
+      <div class="ado-popover-finding-header">
+        <span class="ado-popover-line">L${f.line}</span>
+        <span class="ado-popover-badge" style="background: ${sevColor}20; color: ${sevColor};">${escapeHtml(f.severity)}</span>
       </div>
-      <div class="pep-popover-message">${escapeHtml(f.message)}</div>
+      <div class="ado-popover-message">${escapeHtml(f.message)}</div>
       ${suggestionHtml}
       ${codeHtml}
       ${whyHtml}
@@ -379,7 +379,7 @@ function renderPopoverFinding(f: Finding): string {
 function popoverStyles(): string {
   return `
     *, *::before, *::after { box-sizing: border-box; }
-    .pep-popover {
+    .ado-popover {
       position: absolute;
       width: 380px;
       max-height: 400px;
@@ -394,7 +394,7 @@ function popoverStyles(): string {
       color: #323130;
       overflow: hidden;
     }
-    .pep-popover-header {
+    .ado-popover-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -402,7 +402,7 @@ function popoverStyles(): string {
       border-bottom: 1px solid #edebe9;
       flex-shrink: 0;
     }
-    .pep-popover-path {
+    .ado-popover-path {
       font-weight: 600;
       font-size: 11px;
       color: #605e5c;
@@ -410,7 +410,7 @@ function popoverStyles(): string {
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    .pep-popover-close {
+    .ado-popover-close {
       background: none;
       border: none;
       font-size: 16px;
@@ -420,11 +420,11 @@ function popoverStyles(): string {
       border-radius: 3px;
       line-height: 1;
     }
-    .pep-popover-close:hover {
+    .ado-popover-close:hover {
       background: #f3f2f1;
       color: #323130;
     }
-    .pep-popover-body {
+    .ado-popover-body {
       flex: 1;
       overflow-y: auto;
       padding: 10px 12px;
@@ -432,41 +432,41 @@ function popoverStyles(): string {
       flex-direction: column;
       gap: 10px;
     }
-    .pep-popover-finding-header {
+    .ado-popover-finding-header {
       display: flex;
       align-items: center;
       gap: 6px;
       margin-bottom: 4px;
     }
-    .pep-popover-line {
+    .ado-popover-line {
       font-family: "Cascadia Code", "Fira Code", monospace;
       font-size: 11px;
       color: #605e5c;
     }
-    .pep-popover-badge {
+    .ado-popover-badge {
       display: inline-flex;
       padding: 1px 6px;
       border-radius: 8px;
       font-size: 10px;
       font-weight: 600;
     }
-    .pep-popover-message {
+    .ado-popover-message {
       line-height: 1.5;
       margin-bottom: 4px;
     }
-    .pep-popover-suggestion-text {
+    .ado-popover-suggestion-text {
       font-size: 11px;
       color: #605e5c;
       line-height: 1.5;
       margin-bottom: 4px;
     }
-    .pep-popover-code-suggestion {
+    .ado-popover-code-suggestion {
       display: flex;
       align-items: flex-start;
       gap: 8px;
       margin-bottom: 4px;
     }
-    .pep-popover-code-block {
+    .ado-popover-code-block {
       flex: 1;
       min-width: 0;
       margin: 0;
@@ -480,11 +480,11 @@ function popoverStyles(): string {
       overflow-x: auto;
       white-space: pre;
     }
-    .pep-popover-code-block code {
+    .ado-popover-code-block code {
       font-family: inherit;
       font-size: inherit;
     }
-    .pep-popover-copy-btn {
+    .ado-popover-copy-btn {
       flex-shrink: 0;
       padding: 2px 8px;
       border: 1px solid #8a8886;
@@ -497,11 +497,11 @@ function popoverStyles(): string {
       cursor: pointer;
       white-space: nowrap;
     }
-    .pep-popover-copy-btn:hover {
+    .ado-popover-copy-btn:hover {
       background: #f3f2f1;
       color: #323130;
     }
-    .pep-popover-why {
+    .ado-popover-why {
       font-size: 11px;
       color: #605e5c;
       padding: 4px 8px;
@@ -548,7 +548,7 @@ function startObserver(): void {
       try {
         applyMarkersToDOM();
       } catch (err) {
-        console.warn('[PEP Review] Observer re-apply failed:', err);
+        console.warn('[ADO Review] Observer re-apply failed:', err);
       }
     }, 200);
   });
