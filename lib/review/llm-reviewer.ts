@@ -40,8 +40,16 @@ function createModel(config: AiProviderConfig) {
         apiKey: config.apiKey,
         ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
       }).chat(config.model);
-    case 'anthropic':
-      return createAnthropic({ apiKey: config.apiKey })(config.model);
+    case 'anthropic': {
+      // sk-ant-oat* = OAuth token (Bearer), sk-ant-api* = API key (x-api-key)
+      const isOAuth = config.apiKey.includes('-oat');
+      return createAnthropic({
+        ...(isOAuth
+          ? { authToken: config.apiKey }
+          : { apiKey: config.apiKey }),
+        headers: { 'anthropic-dangerous-direct-browser-access': 'true' },
+      })(config.model);
+    }
     case 'google':
       return createGoogleGenerativeAI({ apiKey: config.apiKey })(config.model);
     case 'ollama':
