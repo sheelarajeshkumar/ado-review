@@ -52,6 +52,7 @@ function createModel(config: AiProviderConfig) {
     }
     case 'google':
       return createGoogleGenerativeAI({ apiKey: config.apiKey })(config.model);
+    case 'external':
     case 'ollama':
       return null;
   }
@@ -125,6 +126,87 @@ async function reviewWithOllama(
 }
 
 /**
+ * Extract the first JSON array from a free-form text response.
+ * Searches for `[...]` blocks and attempts to parse each one.
+ */
+function extractJsonArray(text: string): unknown[] | null {
+  const matches = text.match(/\[[\s\S]*?\n\s*\]/g);
+  if (!matches) return null;
+  for (const m of matches) {
+    try {
+      const parsed = JSON.parse(m);
+      if (Array.isArray(parsed)) return parsed;
+    } catch { /* try next match */ }
+  }
+  return null;
+}
+
+/**
+ * Map external API field names to our schema.
+ * Handles: lineNumber→line, description→message, codeBlock→suggestedCode, explanation→why.
+ */
+function mapExternalFinding(raw: Record<string, unknown>): Record<string, unknown> {
+  return {
+    line: raw.line ?? raw.lineNumber ?? raw.line_number ?? 0,
+    severity: raw.severity ?? 'Info',
+    message: raw.message ?? raw.description ?? '',
+    suggestion: raw.suggestion ?? null,
+    suggestedCode: raw.suggestedCode ?? raw.codeBlock ?? raw.code_block ?? null,
+    why: raw.why ?? raw.explanation ?? '',
+  };
+}
+
+/**
+ * Review a file using an external OpenAI-compatible API.
+ * The API may return free-form text with embedded JSON, so we extract
+ * and map the fields to our schema.
+ */
+async function reviewWithExternal(
+  filePath: string,
+  fileContent: string,
+  changeType: string,
+  config: AiProviderConfig,
+  changedRanges: ChangedRange[] | null,
+): Promise<FileReview> {
+  const model = createOpenAI({
+    apiKey: config.apiKey,
+    baseURL: config.baseUrl || 'http://localhost:8000/v1',
+  }).chat(config.model);
+
+  const { text } = await generateText({
+    model,
+    system: buildSystemPrompt(),
+    prompt: buildFileReviewPrompt(filePath, fileContent, changeType, changedRanges),
+    maxOutputTokens: 4000,
+  });
+
+  // Try direct JSON parse first (structured response)
+  try {
+    const direct = JSON.parse(text);
+    const result = FileReviewSchema.safeParse(direct);
+    if (result.success) return result.data;
+  } catch { /* not pure JSON, extract from text */ }
+
+  // Extract JSON array from free-form text and map fields
+  const rawFindings = extractJsonArray(text);
+  if (!rawFindings || rawFindings.length === 0) {
+    return { findings: [], summary: 'No findings detected.' };
+  }
+
+  const mapped = {
+    findings: rawFindings.map((f) => mapExternalFinding(f as Record<string, unknown>)),
+    summary: `Review found ${rawFindings.length} finding(s) in ${filePath}`,
+  };
+
+  const result = FileReviewSchema.safeParse(mapped);
+  if (!result.success) {
+    throw new Error(`External API response failed validation for ${filePath}: ${result.error.message}`);
+  }
+
+  return result.data;
+}
+
+/**
  * Review a single file using the configured AI provider and return validated findings.
  *
  * @param filePath - Path to the file being reviewed
@@ -142,9 +224,12 @@ export async function reviewSingleFile(
   providerConfig: AiProviderConfig,
   changedRanges: ChangedRange[] | null = null,
 ): Promise<FileReview> {
-  // Ollama uses its own client directly
+  // Ollama and External use their own code paths
   if (providerConfig.provider === 'ollama') {
     return reviewWithOllama(filePath, fileContent, changeType, providerConfig, changedRanges);
+  }
+  if (providerConfig.provider === 'external') {
+    return reviewWithExternal(filePath, fileContent, changeType, providerConfig, changedRanges);
   }
 
   const model = createModel(providerConfig)!;

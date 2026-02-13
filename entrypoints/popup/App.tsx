@@ -12,6 +12,7 @@ const PROVIDER_LABELS: Record<string, string> = {
   anthropic: 'Anthropic',
   google: 'Google',
   ollama: 'Ollama',
+  external: 'External',
 };
 
 function formatRelativeTime(iso: string): string {

@@ -5,7 +5,7 @@
  */
 
 /** Supported AI provider identifiers. */
-export type AiProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
+export type AiProvider = 'openai' | 'anthropic' | 'google' | 'ollama' | 'external';
 
 /** Configuration for the selected AI provider. */
 export interface AiProviderConfig {

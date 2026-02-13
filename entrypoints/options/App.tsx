@@ -11,6 +11,7 @@ const DEFAULT_MODELS: Record<AiProvider, string> = {
   anthropic: "claude-sonnet-4-20250514",
   google: "gemini-2.0-flash",
   ollama: "codellama:7b",
+  external: "gpt-4",
 };
 
 const MODEL_PLACEHOLDERS: Record<AiProvider, string> = {
@@ -18,6 +19,7 @@ const MODEL_PLACEHOLDERS: Record<AiProvider, string> = {
   anthropic: "claude-sonnet-4-20250514",
   google: "gemini-2.0-flash",
   ollama: "codellama:7b",
+  external: "gpt-4",
 };
 
 const PROVIDER_LABELS: Record<AiProvider, string> = {
@@ -25,6 +27,7 @@ const PROVIDER_LABELS: Record<AiProvider, string> = {
   anthropic: 'Anthropic Claude',
   google: 'Google Gemini',
   ollama: 'Ollama (Local)',
+  external: 'External API',
 };
 
 const inputClass =
@@ -91,7 +94,11 @@ export default function App() {
     setProvider(newProvider);
     setModel(DEFAULT_MODELS[newProvider]);
     setApiKey('');
-    setBaseUrl(newProvider === 'ollama' ? 'http://localhost:11434' : '');
+    setBaseUrl(
+      newProvider === 'ollama' ? 'http://localhost:11434'
+        : newProvider === 'external' ? 'http://localhost:8000/v1'
+        : '',
+    );
     setProviderFeedback(null);
   }
 
@@ -99,6 +106,7 @@ export default function App() {
     e.preventDefault();
     if (loading) return;
     if (provider !== 'ollama' && !apiKey.trim()) return;
+    if (provider === 'external' && !baseUrl.trim()) return;
 
     setLoading(true);
     setProviderFeedback(null);
@@ -222,7 +230,7 @@ export default function App() {
 
   const status = getStatusDisplay();
   const showApiKey = provider !== 'ollama';
-  const showBaseUrl = provider === 'ollama' || provider === 'openai';
+  const showBaseUrl = provider === 'ollama' || provider === 'openai' || provider === 'external';
 
   return (
     <div className="min-h-screen bg-fluent-bg-page transition-colors duration-200">
@@ -334,6 +342,7 @@ export default function App() {
                   <option value="anthropic">{PROVIDER_LABELS.anthropic}</option>
                   <option value="google">{PROVIDER_LABELS.google}</option>
                   <option value="ollama">{PROVIDER_LABELS.ollama}</option>
+                  <option value="external">{PROVIDER_LABELS.external}</option>
                 </select>
               </div>
 
@@ -359,7 +368,7 @@ export default function App() {
                     type="password"
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={provider === 'openai' ? 'sk-...' : 'Enter API key'}
+                    placeholder={provider === 'openai' ? 'sk-...' : provider === 'external' ? 'Bearer token (e.g. sk-test-key1)' : 'Enter API key'}
                     disabled={loading}
                     autoComplete="off"
                     className={cn(inputClass, 'font-mono')}
@@ -370,14 +379,14 @@ export default function App() {
               {showBaseUrl && (
                 <div className="mb-4">
                   <label htmlFor="baseurl-input" className="block text-sm font-medium mb-1.5 text-fluent-text-secondary">
-                    Base URL {provider === 'openai' ? '(optional, for Azure OpenAI)' : ''}
+                    Base URL {provider === 'openai' ? '(optional, for Azure OpenAI)' : provider === 'external' ? '(required)' : ''}
                   </label>
                   <input
                     id="baseurl-input"
                     type="text"
                     value={baseUrl}
                     onChange={(e) => setBaseUrl(e.target.value)}
-                    placeholder={provider === 'ollama' ? 'http://localhost:11434' : 'https://your-resource.openai.azure.com/...'}
+                    placeholder={provider === 'ollama' ? 'http://localhost:11434' : provider === 'external' ? 'http://localhost:8000/v1' : 'https://your-resource.openai.azure.com/...'}
                     disabled={loading}
                     autoComplete="off"
                     className={inputClass}
@@ -416,6 +425,7 @@ export default function App() {
                         <option value="anthropic">{PROVIDER_LABELS.anthropic}</option>
                         <option value="google">{PROVIDER_LABELS.google}</option>
                         <option value="ollama">{PROVIDER_LABELS.ollama}</option>
+                        <option value="external">{PROVIDER_LABELS.external}</option>
                       </select>
                     </div>
 
@@ -440,7 +450,7 @@ export default function App() {
                 <button
                   type="submit"
                   className={btnPrimary}
-                  disabled={loading || (showApiKey && !apiKey.trim())}
+                  disabled={loading || (showApiKey && !apiKey.trim()) || (provider === 'external' && !baseUrl.trim())}
                 >
                   {loading ? 'Saving...' : 'Save Configuration'}
                 </button>
