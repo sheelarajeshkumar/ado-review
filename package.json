@@ -1,6 +1,6 @@
 {
   "name": "ado-review",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "AI-powered code review for Azure DevOps pull requests",
   "private": true,
   "type": "module",
