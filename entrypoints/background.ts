@@ -15,8 +15,8 @@ import { checkAuth } from '@/lib/auth/manager';
 import { savePat } from '@/lib/auth/pat';
 import { runReview } from '@/lib/review/orchestrator';
 import { postFileFindings, buildSummaryMarkdown } from '@/lib/review/comment-mapper';
-import { postSummaryComment } from '@/lib/ado-api/threads';
-import type { AuthStatus, PrInfo, FileReviewResult } from '@/shared/types';
+import { postInlineComment, postSummaryComment } from '@/lib/ado-api/threads';
+import type { AuthStatus, Finding, PrInfo, FileReviewResult } from '@/shared/types';
 import type { PortMessage } from '@/shared/messages';
 
 export default defineBackground(() => {
@@ -28,6 +28,7 @@ export default defineBackground(() => {
     CHECK_AUTH: handleCheckAuth,
     SAVE_PAT: handleSavePat,
     POST_REVIEW_COMMENTS: handlePostReviewComments,
+    POST_SINGLE_COMMENT: handlePostSingleComment,
   };
 
   browser.runtime.onMessage.addListener(
@@ -121,6 +122,21 @@ async function handlePostReviewComments(
     const summaryMarkdown = buildSummaryMarkdown(results, prTitle);
     await postSummaryComment(prInfo, summaryMarkdown);
 
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
+ * Handle POST_SINGLE_COMMENT message: post a single finding as an inline comment on the PR.
+ */
+async function handlePostSingleComment(
+  payload: { prInfo: PrInfo; filePath: string; finding: Finding; iterationId: number },
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { prInfo, filePath, finding, iterationId } = payload;
+    await postInlineComment(prInfo, filePath, finding, iterationId);
     return { success: true };
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : String(error) };

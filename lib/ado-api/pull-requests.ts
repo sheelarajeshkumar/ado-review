@@ -20,6 +20,10 @@ export async function getPrDetails(prInfo: PrInfo): Promise<PrDetails> {
   const response = await adoFetch(url);
   const data = (await response.json()) as AdoPullRequest;
 
+  if (!data.lastMergeSourceCommit?.commitId || !data.lastMergeTargetCommit?.commitId) {
+    throw new Error('PR is missing source or target merge commit — it may be a draft or have merge conflicts.');
+  }
+
   return {
     sourceCommitId: data.lastMergeSourceCommit.commitId,
     targetCommitId: data.lastMergeTargetCommit.commitId,
@@ -42,7 +46,10 @@ export async function getLatestIterationId(prInfo: PrInfo): Promise<number> {
   const url = `${prInfo.baseUrl}/_apis/git/repositories/${prInfo.repo}/pullRequests/${prInfo.prId}/iterations`;
   const response = await adoFetch(url);
   const data = await response.json();
-  const iterations = data.value as AdoIteration[];
+  const iterations = (data.value ?? []) as AdoIteration[];
+  if (iterations.length === 0) {
+    throw new Error('PR has no iterations — cannot determine change set.');
+  }
   return Math.max(...iterations.map((i) => i.id));
 }
 
@@ -70,7 +77,7 @@ export async function getChangedFiles(
     const response = await adoFetch(url);
     const data = await response.json();
 
-    const entries = data.changeEntries as IterationChange[];
+    const entries = (data.changeEntries ?? []) as IterationChange[];
     allChanges.push(...entries);
 
     if (entries.length < top) break;

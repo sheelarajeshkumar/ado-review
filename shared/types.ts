@@ -50,6 +50,7 @@ export interface Finding {
   suggestion: string | null;
   suggestedCode: string | null;
   why: string;
+  posted?: boolean;
 }
 
 /** Progress update sent over the review port. */

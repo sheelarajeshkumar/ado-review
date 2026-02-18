@@ -7,6 +7,7 @@
 
 import type {
   AuthMethod,
+  Finding,
   PrInfo,
   ReviewProgress,
   FileReviewResult,
@@ -20,7 +21,9 @@ export type Message =
   | { type: 'SAVE_PAT'; payload: { pat: string; orgUrl?: string } }
   | { type: 'PAT_RESULT'; payload: { success: boolean; error?: string } }
   | { type: 'POST_REVIEW_COMMENTS'; payload: { prInfo: PrInfo; fileResults: FileReviewResult[]; iterationId: number; prTitle: string } }
-  | { type: 'POST_REVIEW_RESULT'; payload: { success: boolean; error?: string } };
+  | { type: 'POST_REVIEW_RESULT'; payload: { success: boolean; error?: string } }
+  | { type: 'POST_SINGLE_COMMENT'; payload: { prInfo: PrInfo; filePath: string; finding: Finding; iterationId: number } }
+  | { type: 'POST_SINGLE_RESULT'; payload: { success: boolean; error?: string } };
 
 /** All valid message type strings. */
 export type MessageType = Message['type'];

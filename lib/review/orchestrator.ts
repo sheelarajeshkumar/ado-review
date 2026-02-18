@@ -17,7 +17,7 @@ import { getPrDetails, getLatestIterationId, getChangedFiles } from '@/lib/ado-a
 import { getFileContent } from '@/lib/ado-api/file-content';
 import { getFileDiff } from '@/lib/ado-api/diff';
 import { CHANGE_TYPE_MAP } from '@/lib/ado-api/types';
-import { shouldSkipFile, shouldSkipByChangeType } from './file-filter';
+import { shouldSkipFile, shouldSkipByChangeType, isDeleteChangeType } from './file-filter';
 import { reviewSingleFile, getFastConfig } from './llm-reviewer';
 import { retryWithBackoff } from './retry';
 import { redactSecrets } from './secret-filter';
@@ -82,13 +82,26 @@ export async function runReview(
   let skippedCount = 0;
 
   for (const change of changes) {
+    // Guard against null item/path (can happen with deleted files)
+    const filePath = change.item?.path;
+    if (!filePath) {
+      skippedCount++;
+      continue;
+    }
+
+    // Check delete bit in raw changeType to catch combined flags (e.g., 24 = delete + rename)
+    if (isDeleteChangeType(change.changeType)) {
+      skippedCount++;
+      continue;
+    }
+
     const changeTypeStr = CHANGE_TYPE_MAP[change.changeType] ?? 'edit';
 
-    if (shouldSkipByChangeType(changeTypeStr) || shouldSkipFile(change.item.path)) {
+    if (shouldSkipByChangeType(changeTypeStr) || shouldSkipFile(filePath)) {
       skippedCount++;
     } else {
       reviewableChanges.push({
-        path: change.item.path,
+        path: filePath,
         changeType: changeTypeStr,
         change,
       });
@@ -127,6 +140,9 @@ export async function runReview(
       const fileResult = await retryWithBackoff(
         async () => {
           const raw = await getFileContent(prInfo, filePath, prDetails.sourceCommitId);
+          if (raw.length > 500_000) {
+            return { findings: [], summary: 'File too large for review (>500KB)' };
+          }
           const { redacted: content } = redactSecrets(raw);
           const lineCount = content.split('\n').length;
           const effectiveConfig = lineCount <= 150 ? getFastConfig(providerConfig) : providerConfig;

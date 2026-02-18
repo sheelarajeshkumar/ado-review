@@ -317,20 +317,69 @@ export default function App({ prInfo }: AppProps) {
     setPosting(false);
   };
 
+  const handlePostSingleFinding = async (filePath: string, findingIndex: number) => {
+    if (!state.summary) return;
+    const file = state.fileResults.find((f) => f.filePath === filePath);
+    const finding = file?.findings?.[findingIndex];
+    if (!finding) return;
+
+    const result = (await sendMessage('POST_SINGLE_COMMENT', {
+      prInfo,
+      filePath,
+      finding,
+      iterationId: state.summary.iterationId,
+    })) as { success: boolean; error?: string };
+
+    if (!result.success) {
+      throw new Error(result.error ?? 'Failed to post comment');
+    }
+
+    // Mark finding as posted in state
+    setState((prev) => ({
+      ...prev,
+      fileResults: prev.fileResults.map((fr) =>
+        fr.filePath === filePath
+          ? {
+              ...fr,
+              findings: fr.findings?.map((f, i) =>
+                i === findingIndex ? { ...f, posted: true } : f,
+              ),
+            }
+          : fr,
+      ),
+    }));
+  };
+
   const handlePostToPr = async () => {
     if (posting || !state.summary || state.isPartial) return;
     setPosting(true);
     setPostLabel('Posting\u2026');
     try {
+      // Filter out already-posted findings
+      const filteredResults = state.fileResults
+        .map((fr) => ({
+          ...fr,
+          findings: fr.findings?.filter((f) => !f.posted),
+        }))
+        .filter((fr) => fr.status !== 'success' || (fr.findings && fr.findings.length > 0));
+
       const result = (await sendMessage('POST_REVIEW_COMMENTS', {
         prInfo,
-        fileResults: state.fileResults,
+        fileResults: filteredResults,
         iterationId: state.summary.iterationId,
         prTitle: state.summary.prTitle,
       })) as { success: boolean; error?: string };
 
       if (result.success) {
         setPostLabel('Posted!');
+        // Mark all findings as posted
+        setState((prev) => ({
+          ...prev,
+          fileResults: prev.fileResults.map((fr) => ({
+            ...fr,
+            findings: fr.findings?.map((f) => ({ ...f, posted: true })),
+          })),
+        }));
       } else {
         setPostLabel('Post failed');
         setTimeout(() => setPostLabel('Post to PR'), 3000);
@@ -362,6 +411,7 @@ export default function App({ prInfo }: AppProps) {
             onExport={handleExport}
             onCopy={handleCopy}
             onPostToPr={handlePostToPr}
+            onPostFinding={handlePostSingleFinding}
             onReviewAgain={handleReviewAgain}
             onStop={stopReview}
             onDiscard={handleDiscard}

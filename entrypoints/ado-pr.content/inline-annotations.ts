@@ -187,7 +187,7 @@ function isDiffContent(el: Element): boolean {
 function applyMarkersToDOM(): void {
   const sections = getDiffFileSections();
   if (sections.size === 0) {
-    console.warn('[ADO Review] No diff file sections found — inline annotations skipped.');
+    console.debug('[ADO Review] No diff file sections found yet — will retry on DOM change.');
     return;
   }
 

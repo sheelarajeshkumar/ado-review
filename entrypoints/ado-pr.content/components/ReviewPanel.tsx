@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import type { ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
+import type { Finding, ReviewProgress, FileReviewResult, ReviewSummary } from '@/shared/types';
 import { cn } from '@/lib/cn';
 import { ThemeToggle } from '@/lib/ThemeToggle';
 
@@ -33,6 +33,48 @@ function CopyFixButton({ text }: { text: string }) {
   );
 }
 
+function PostFindingButton({ posted, onPost }: { posted?: boolean; onPost: () => Promise<void> }) {
+  const [label, setLabel] = useState(posted ? 'Posted' : 'Post');
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    if (posted) setLabel('Posted');
+  }, [posted]);
+
+  const handleClick = async () => {
+    if (posted || label === 'Posting...') return;
+    setLabel('Posting...');
+    try {
+      await onPost();
+      setLabel('Posted');
+    } catch {
+      setLabel('Failed');
+      clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(() => setLabel('Post'), 2000);
+    }
+  };
+
+  useEffect(() => () => clearTimeout(timerRef.current), []);
+
+  const isDisabled = posted || label === 'Posted' || label === 'Posting...';
+
+  return (
+    <button
+      className={cn(
+        'shrink-0 px-2 py-0.5 border rounded text-[10px] font-semibold cursor-pointer whitespace-nowrap leading-relaxed transition-colors duration-150',
+        isDisabled
+          ? 'border-fluent-border bg-fluent-bg-subtle text-fluent-text-disabled cursor-default'
+          : 'border-fluent-primary bg-fluent-bg text-fluent-primary hover:bg-fluent-primary-soft',
+      )}
+      onClick={handleClick}
+      type="button"
+      disabled={isDisabled}
+    >
+      {label}
+    </button>
+  );
+}
+
 interface ReviewPanelProps {
   phase: 'reviewing' | 'complete' | 'error';
   progress: ReviewProgress | null;
@@ -47,6 +89,7 @@ interface ReviewPanelProps {
   onExport: () => void;
   onCopy: () => void;
   onPostToPr: () => void;
+  onPostFinding: (filePath: string, findingIndex: number) => Promise<void>;
   onReviewAgain: () => void;
   onStop: () => void;
   onDiscard: () => void;
@@ -78,7 +121,7 @@ const SEVERITY_STYLES: Record<string, string> = {
   clean: 'bg-severity-clean-bg text-severity-clean-text border-l-2 border-l-severity-clean-border',
 };
 
-function FileSection({ result, index }: { result: FileReviewResult; index: number }) {
+function FileSection({ result, index, onPostFinding }: { result: FileReviewResult; index: number; onPostFinding?: (findingIndex: number) => Promise<void> }) {
   const [expanded, setExpanded] = useState(false);
   const findings = result.findings ?? [];
   const hasFindingsDetail = result.status === 'success' && findings.length > 0;
@@ -196,6 +239,11 @@ function FileSection({ result, index }: { result: FileReviewResult; index: numbe
                       <CopyFixButton text={f.suggestedCode} />
                     </div>
                   )}
+                  {onPostFinding && (
+                    <div className="flex items-center gap-2 mt-2 pt-1.5 border-t border-fluent-border-subtle">
+                      <PostFindingButton posted={f.posted} onPost={() => onPostFinding(i)} />
+                    </div>
+                  )}
                   {f.why && (
                     <div className="text-[11px] text-fluent-text-secondary mt-2 px-2.5 py-2 bg-fluent-bg-subtle rounded-md leading-relaxed border border-fluent-border-subtle">
                       <strong>Why:</strong> {f.why}
@@ -298,6 +346,7 @@ export default function ReviewPanel({
   onExport,
   onCopy,
   onPostToPr,
+  onPostFinding,
   onReviewAgain,
   onStop,
   onDiscard,
@@ -500,7 +549,12 @@ export default function ReviewPanel({
             {fileResults.length > 0 && (
               <div className="flex flex-col gap-1">
                 {fileResults.map((r, i) => (
-                  <FileSection key={i} result={r} index={i} />
+                  <FileSection
+                    key={i}
+                    result={r}
+                    index={i}
+                    onPostFinding={!isPartial ? (findingIndex) => onPostFinding(r.filePath, findingIndex) : undefined}
+                  />
                 ))}
               </div>
             )}

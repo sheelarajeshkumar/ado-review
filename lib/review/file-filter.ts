@@ -56,3 +56,16 @@ export function shouldSkipFile(filePath: string): boolean {
 export function shouldSkipByChangeType(changeType: string): boolean {
   return changeType === 'delete';
 }
+
+/**
+ * Check whether a numeric ADO changeType includes the delete bit.
+ *
+ * ADO uses a bitmask for change types (e.g., 16 = delete, 24 = delete + rename).
+ * This catches combined flags that the simple CHANGE_TYPE_MAP may miss.
+ *
+ * @param changeType - The raw numeric changeType from ADO API
+ * @returns true if the delete bit (0x10) is set
+ */
+export function isDeleteChangeType(changeType: number): boolean {
+  return (changeType & 16) !== 0;
+}
